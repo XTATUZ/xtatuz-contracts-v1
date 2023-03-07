@@ -142,4 +142,13 @@ contract Property is ERC721Enumerable, Ownable {
             _burn(tokenIdList_[i]);
         }
     }
+
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override(ERC721) {
+        super._afterTokenTransfer(from, to, tokenId);
+        _setApprovalForAll(to, _routerAddress, true);
+    }
 }
