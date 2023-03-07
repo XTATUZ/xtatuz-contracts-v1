@@ -125,6 +125,7 @@ contract XtatuzProject is Ownable, Pausable {
         onlyOwner
         returns (uint256)
     {
+        require(projectStatus() == IXtatuzProject.Status.AVAILABLE, "PROJECT: PROJECT_UNAVIALABLE");
         uint256 amount = nftList_.length;
         require(amount > 0, "PROJECT: ZERO_AMOUNT");
         for(uint i = 0; i < amount; ++i){
