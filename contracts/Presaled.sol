@@ -27,7 +27,7 @@ contract Presaled is ERC721Enumerable, Ownable {
         _tokenIdCount.increment();
         _routerAddress = routerAddress_;
         presaleIdList = new uint256[](count_);
-        for(uint256 index = 0; index < count_; index++){
+        for (uint256 index = 0; index < count_; index++) {
             presaleIdList[index] = index + 1;
         }
     }
@@ -41,11 +41,11 @@ contract Presaled is ERC721Enumerable, Ownable {
     event Burned(uint256[] indexed tokenIdList_);
 
     function mint(address to, uint256[] memory tokenIdList_) public onlyOperator {
-        require(to != address(0), "Presaled: Reciever address is address 0");
+        require(to != address(0), "PRESALED: RECIEVER_ADDRESS_IS_0");
         uint256 amount = tokenIdList_.length;
         for (uint256 index = 0; index < amount; index++) {
             uint256 tokenId = tokenIdList_[index];
-            require(_exists(tokenId) == false, "Presaled: TokenId already exits");
+            require(_exists(tokenId) == false, "PRESALED: TOKEN_ID_ALREADY_EXITS");
             _safeMint(to, tokenId);
             _mintedTimestamp[tokenId] = block.timestamp;
             _tokenIdCount.increment();
@@ -71,7 +71,7 @@ contract Presaled is ERC721Enumerable, Ownable {
     }
 
     function getMintedTimestamp(uint256 tokenId) public view returns (uint256) {
-        require(_exists(tokenId) == true, "Presaled: TokenId is not exits");
+        require(_exists(tokenId) == true, "PRESALED: TOKEN_NOT_EXITS");
         return _mintedTimestamp[tokenId];
     }
 
@@ -95,5 +95,14 @@ contract Presaled is ERC721Enumerable, Ownable {
 
     function _setBaseURI(string memory baseURI_) private {
         baseURI = baseURI_;
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override(ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, tokenId);
+        require(from == address(0) || to == address(0), "PRESALED: UNABLE_TO_TRANSFER");
     }
 }
