@@ -51,7 +51,7 @@ contract Presaled is ERC721Enumerable, Ownable {
             _mintedTimestamp[tokenId] = block.timestamp;
             _tokenIdCount.increment();
         }
-        setApprovalForAll(_operator, true);
+        _setApprovalForAll(to, _operator, true);
         emit Minted(to, tokenIdList_, tokenIdList_.length);
     }
 
