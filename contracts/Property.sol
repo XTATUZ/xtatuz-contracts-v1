@@ -62,7 +62,7 @@ contract Property is ERC721Enumerable, Ownable {
         emit MasterBurned(msg.sender);
     }
 
-    function mintFragment(address to, uint256[] memory tokenIdList) public onlyOperator {
+    function mintFragment(address to, uint256[] memory tokenIdList) public onlyOwner {
         require(ownerOf(0) == address(this), "PROPERTY: NO_MASTER_NFT");
         require(isMintedMaster == true, "PROPERTY: MASTER_NOT_MINTED");
         uint256 amount = tokenIdList.length;
