@@ -150,7 +150,7 @@ contract XtatuzProject is Ownable, Pausable {
         return price;
     }
 
-    function claim(address member_) public onlyOperator whenNotPaused {
+    function claim(address member_) public onlyOwner whenNotPaused {
         uint256[] memory tokenList = IPresaled(_presaledAddress).getPresaledOwner(member_);
         require(tokenList.length > 0, "PROJECT: TOKENLIST_ZERO");
         require(projectStatus() == IXtatuzProject.Status.FINISH, "PROJECT: PROJECT_UNFINISH");
@@ -165,7 +165,7 @@ contract XtatuzProject is Ownable, Pausable {
         property.mintFragment(member_, tokenList);
     }
 
-    function refund(address member_) public onlyOperator whenNotPaused{
+    function refund(address member_) public onlyOwner whenNotPaused{
         uint256[] memory tokenList = IPresaled(_presaledAddress).getPresaledOwner(member_);
         require(projectStatus() == IXtatuzProject.Status.REFUND, "PROJECT: PROJECT_UNREFUNDED");
 
