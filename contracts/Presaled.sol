@@ -55,7 +55,7 @@ contract Presaled is ERC721Enumerable, Ownable {
         emit Minted(to, tokenIdList_, tokenIdList_.length);
     }
 
-    function burn(uint256[] memory tokenIdList_) public onlyOperator {
+    function burn(uint256[] memory tokenIdList_) public onlyOwner {
         for (uint256 index = 0; index < tokenIdList_.length; index++) {
             _burn(tokenIdList_[index]);
         }
