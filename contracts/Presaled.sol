@@ -40,7 +40,7 @@ contract Presaled is ERC721Enumerable, Ownable {
     event Minted(address indexed to, uint256[] nftList, uint256 amount);
     event Burned(uint256[] indexed tokenIdList_);
 
-    function mint(address to, uint256[] memory tokenIdList_) public onlyOperator {
+    function mint(address to, uint256[] memory tokenIdList_) public onlyOwner {
         require(to != address(0), "PRESALED: RECIEVER_ADDRESS_IS_0");
         uint256 amount = tokenIdList_.length;
         for (uint256 index = 0; index < amount; index++) {
