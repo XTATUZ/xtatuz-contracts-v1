@@ -40,10 +40,7 @@ contract XtatuzRouter {
     mapping(uint256 => uint256) private _totalRerollFee;
     mapping(uint256 => mapping(address => bool)) private _isNotice;
 
-    constructor(
-        address spv_,
-        address factoryAddress_
-    ) {
+    constructor(address spv_, address factoryAddress_) {
         _transferSpv(spv_);
         _xtatuzFactory = IXtatuzFactory(factoryAddress_);
         _projectIdCounter.increment();
@@ -51,7 +48,12 @@ contract XtatuzRouter {
 
     event SpvTransferred(address indexed prevSpv, address indexed newSpv);
     event CreatedProject(uint256 indexed projectId, address indexed projectAddress);
-    event AddProjectMember(uint256 indexed projectId, address indexed member, string indexed referral, uint256 totalPrice);
+    event AddProjectMember(
+        uint256 indexed projectId,
+        address indexed member,
+        string indexed referral,
+        uint256 totalPrice
+    );
     event Claimed(uint256 indexed projectId, address member);
     event Refunded(uint256 indexed projectId, address member);
     event Buyback(uint256 indexed projectId, address member);
@@ -98,10 +100,12 @@ contract XtatuzRouter {
             membershipAddress_: _membershipAddress,
             name_: name_,
             symbol_: symbol_,
-            routerAddress: address(this)
+            routerAddress: address(this),
+            startPresale_: startPresale_,
+            endPresale_: endPresale_
         });
         address projectAddress = _xtatuzFactory.createProjectContract(data);
-        IXtatuzProject(projectAddress).setPresalePeriod(startPresale_, endPresale_);
+        // IXtatuzProject(projectAddress).setPresalePeriod(startPresale_, endPresale_);
         emit CreatedProject(projectId, projectAddress);
     }
 
@@ -173,7 +177,7 @@ contract XtatuzRouter {
         address tokenAddress = rerollContract.tokenAddress();
         string memory prevUri = property.tokenURI(tokenId_);
         uint256 fee = rerollContract.rerollFee();
-        string[] memory rerollData = rerollContract.getRerollData(projectId_);        
+        string[] memory rerollData = rerollContract.getRerollData(projectId_);
         address tokenOwner = property.ownerOf(tokenId_);
         require(tokenOwner == msg.sender, "ROUTER: NOT_NFT_OWNER");
 
@@ -199,7 +203,7 @@ contract XtatuzRouter {
         _totalRerollFee[projectId_] = 0;
         emit ClaimedRerollFee(msg.sender, projectId_, totalFee);
     }
-    
+
     function isMemberClaimed(address member_, uint256 projectId_) public view returns (bool) {
         return _isMemberClaimed[member_][projectId_];
     }
@@ -291,11 +295,10 @@ contract XtatuzRouter {
         IProperty property = IProperty(propertyAddress);
         uint256[] memory nftList = property.getTokenIdList(inactiveWallet_);
 
-        for(uint i = 0; i < nftList.length; i++){
+        for (uint256 i = 0; i < nftList.length; i++) {
             IERC721(propertyAddress).safeTransferFrom(inactiveWallet_, msg.sender, nftList[i]);
         }
 
         emit PullbackInactive(projectId_, inactiveWallet_);
     }
-
 }

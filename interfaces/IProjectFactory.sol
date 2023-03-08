@@ -11,6 +11,8 @@ interface IProjectFactory {
         address tokenAddress_;
         address propertyAddress_;
         address presaledAddress_;
+        uint256 startPresale_;
+        uint256 endPresale_;
     }
 
     function createProject(CreateProject memory) external payable returns (address);

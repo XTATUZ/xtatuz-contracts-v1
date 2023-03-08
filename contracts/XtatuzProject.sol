@@ -49,11 +49,14 @@ contract XtatuzProject is Ownable, Pausable {
         uint256 underwriteCount_,
         address tokenAddress_,
         address propertyAddress_,
-        address presaledAddress_
+        address presaledAddress_,
+        uint256 startPresale_,
+        uint256 endPresale_
     ) {
         _transferOperator(operator_);
         _transferTrustee(trustee_);
         _initialData(count_, underwriteCount_, tokenAddress_, propertyAddress_, presaledAddress_);
+        setPresalePeriod(startPresale_, endPresale_);
         projectId = projectId_;
         _projectOwner = tx.origin;
     }
@@ -99,12 +102,12 @@ contract XtatuzProject is Ownable, Pausable {
         _;
     }
 
-    modifier onlyProjectOwner {
+    modifier onlyProjectOwner() {
         checkOnlyProjectOwner();
         _;
     }
 
-    function setPresalePeriod(uint256 startPresale_, uint256 endPresale_) public onlyOperator {
+    function setPresalePeriod(uint256 startPresale_, uint256 endPresale_) internal onlyOwner {
         require(endPresale_ > startPresale_, "PROJECT: WRONG_END_DATE");
         startPresale = startPresale_;
         endPresale = endPresale_;
@@ -130,7 +133,7 @@ contract XtatuzProject is Ownable, Pausable {
         require(projectStatus() == IXtatuzProject.Status.AVAILABLE, "PROJECT: PROJECT_UNAVIALABLE");
         uint256 amount = nftList_.length;
         require(amount > 0, "PROJECT: ZERO_AMOUNT");
-        for(uint i = 0; i < amount; ++i){
+        for (uint256 i = 0; i < amount; ++i) {
             require(nftList_[i] <= count, "PROJECT: ID_OVER_FRAGMENT");
         }
         _checkAvailableNFT(nftList_);
@@ -165,12 +168,12 @@ contract XtatuzProject is Ownable, Pausable {
         property.mintFragment(member_, tokenList);
     }
 
-    function refund(address member_) public onlyOwner whenNotPaused{
+    function refund(address member_) public onlyOwner whenNotPaused {
         uint256[] memory tokenList = IPresaled(_presaledAddress).getPresaledOwner(member_);
         require(projectStatus() == IXtatuzProject.Status.REFUND, "PROJECT: PROJECT_UNREFUNDED");
 
         IPresaled(_presaledAddress).burn(tokenList);
- 
+
         uint256 totalToken = getMemberedNFTList[member_].length * minPrice;
         IERC20(tokenAddress).transfer(member_, totalToken);
     }
@@ -302,7 +305,7 @@ contract XtatuzProject is Ownable, Pausable {
     function _transferOperator(address newOperator_) internal ProhibitZeroAddress(newOperator_) {
         address prevOperator = _operatorAddress;
         _operatorAddress = newOperator_;
-        if(_presaledAddress != address(0) && _propertyAddress != address(0)){
+        if (_presaledAddress != address(0) && _propertyAddress != address(0)) {
             IPresaled(_presaledAddress).setOperator(newOperator_);
             IProperty(_propertyAddress).setOperator(newOperator_);
         }
@@ -347,10 +350,7 @@ contract XtatuzProject is Ownable, Pausable {
     }
 
     function _checkSpvAndTrustee() internal view {
-        require(
-            msg.sender == _operatorAddress || msg.sender == _trusteeAddress,
-            "PROJECT: ONLY_SPV_AND_TRUSTEE"
-        );
+        require(msg.sender == _operatorAddress || msg.sender == _trusteeAddress, "PROJECT: ONLY_SPV_AND_TRUSTEE");
     }
 
     function _checkIsFullReserve() internal view {

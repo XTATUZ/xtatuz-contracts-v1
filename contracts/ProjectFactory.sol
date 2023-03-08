@@ -19,7 +19,9 @@ contract ProjectFactory is Ownable {
                 createData.underwriteCount_,
                 createData.tokenAddress_,
                 createData.propertyAddress_,
-                createData.presaledAddress_
+                createData.presaledAddress_,
+                createData.startPresale_,
+                createData.endPresale_
             )
         );
         XtatuzProject(projectAddress).transferOwnership(msg.sender);

@@ -15,6 +15,8 @@ interface IXtatuzFactory {
         string name_;
         string symbol_;
         address routerAddress;
+        uint256 startPresale_;
+        uint256 endPresale_;
     }
 
     function createProjectContract(ProjectPrepareData memory projectData) external payable returns (address);

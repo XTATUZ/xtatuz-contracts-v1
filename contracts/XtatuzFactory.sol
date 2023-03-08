@@ -82,7 +82,9 @@ contract XtatuzFactory is Ownable {
             underwriteCount_ : projectData.underwriteCount_,
             tokenAddress_: projectData.tokenAddress_,
             propertyAddress_: propertyAddress,
-            presaledAddress_: presaledAddress
+            presaledAddress_: presaledAddress,
+            startPresale_: projectData.startPresale_,
+            endPresale_ : projectData.endPresale_
         });
         
         address projectAddress = projectFactory.createProject(projectFactoryData);
