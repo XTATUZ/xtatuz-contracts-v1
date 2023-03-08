@@ -10,8 +10,6 @@ import "../interfaces/IPresaled.sol";
 import "../interfaces/IXtatuzRouter.sol";
 import "../interfaces/IXtatuzProject.sol";
 
-import "hardhat/console.sol";
-
 contract XtatuzProject is Ownable, Pausable {
     address private _operatorAddress;
     address private _trusteeAddress;
