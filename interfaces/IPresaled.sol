@@ -20,4 +20,6 @@ interface IPresaled {
 
     function tokenURI(uint256 tokenId) external view returns (string memory);
 
+    function setOperator(address operator_) external;
+
 }

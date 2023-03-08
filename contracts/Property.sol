@@ -143,6 +143,10 @@ contract Property is ERC721Enumerable, Ownable {
         }
     }
 
+    function setOperator(address operator_) external onlyOwner{
+        _setOperator(operator_);
+    }
+
     function _afterTokenTransfer(
         address from,
         address to,

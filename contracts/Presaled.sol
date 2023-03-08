@@ -98,6 +98,10 @@ contract Presaled is ERC721Enumerable, Ownable {
         baseURI = baseURI_;
     }
 
+    function setOperator(address operator_) external onlyOwner {
+        _setOperator(operator_);
+    }
+
     function _beforeTokenTransfer(
         address from,
         address to,

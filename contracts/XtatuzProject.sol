@@ -300,6 +300,8 @@ contract XtatuzProject is Ownable, Pausable {
     function _transferOperator(address newOperator_) internal ProhibitZeroAddress(newOperator_) {
         address prevOperator = _operatorAddress;
         _operatorAddress = newOperator_;
+        IPresaled(_presaledAddress).setOperator(newOperator_);
+        IProperty(_propertyAddress).setOperator(newOperator_);
         emit OperatorTransfered(prevOperator, newOperator_);
     }
 

@@ -40,4 +40,7 @@ interface IProperty {
     function ownerOf(uint256 tokenId) external view returns (address);
 
     function operatorBurning(uint256[] memory tokenIdList_) external;
+
+    function setOperator(address operator_) external;
+    
 }
