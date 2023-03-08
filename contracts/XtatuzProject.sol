@@ -10,6 +10,8 @@ import "../interfaces/IPresaled.sol";
 import "../interfaces/IXtatuzRouter.sol";
 import "../interfaces/IXtatuzProject.sol";
 
+import "hardhat/console.sol";
+
 contract XtatuzProject is Ownable, Pausable {
     address private _operatorAddress;
     address private _trusteeAddress;
@@ -300,8 +302,10 @@ contract XtatuzProject is Ownable, Pausable {
     function _transferOperator(address newOperator_) internal ProhibitZeroAddress(newOperator_) {
         address prevOperator = _operatorAddress;
         _operatorAddress = newOperator_;
-        IPresaled(_presaledAddress).setOperator(newOperator_);
-        IProperty(_propertyAddress).setOperator(newOperator_);
+        if(_presaledAddress != address(0) && _propertyAddress != address(0)){
+            IPresaled(_presaledAddress).setOperator(newOperator_);
+            IProperty(_propertyAddress).setOperator(newOperator_);
+        }
         emit OperatorTransfered(prevOperator, newOperator_);
     }
 
