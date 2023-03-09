@@ -15,5 +15,5 @@ interface IProjectFactory {
         uint256 endPresale_;
     }
 
-    function createProject(CreateProject memory) external payable returns (address);
+    function createProject(CreateProject memory) external returns (address);
 }

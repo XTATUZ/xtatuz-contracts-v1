@@ -11,5 +11,5 @@ interface IPresaledFactory {
         bytes32 _salt,
         address operator_,
         address routerAddress_
-    ) external payable returns (address);
+    ) external returns (address);
 }

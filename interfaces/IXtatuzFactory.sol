@@ -19,7 +19,7 @@ interface IXtatuzFactory {
         uint256 endPresale_;
     }
 
-    function createProjectContract(ProjectPrepareData memory projectData) external payable returns (address);
+    function createProjectContract(ProjectPrepareData memory projectData) external returns (address);
 
     function getProjectAddress(uint256 projectId_) external view returns (address);
 

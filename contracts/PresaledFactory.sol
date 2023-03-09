@@ -13,7 +13,7 @@ contract PresaledFactory is Ownable{
         bytes32 _salt,
         address operator_,
         address routerAddress_
-    ) public payable onlyOwner returns (address) {
+    ) public onlyOwner returns (address) {
         address presaledAddress = address(new Presaled{salt: _salt}(_name, _symbol, count_, operator_, routerAddress_));
         Presaled(presaledAddress).transferOwnership(msg.sender);
         return presaledAddress;

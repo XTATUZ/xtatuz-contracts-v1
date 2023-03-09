@@ -46,7 +46,6 @@ contract XtatuzFactory is Ownable {
 
     function createProjectContract(IXtatuzFactory.ProjectPrepareData memory projectData)
         public
-        payable
         onlyOwner
         returns (address)
     {

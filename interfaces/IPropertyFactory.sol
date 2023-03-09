@@ -12,5 +12,5 @@ interface IPropertyFactory {
         address operator_,
         address routerAddress_,
         uint256 count_
-    ) external payable returns (address);
+    ) external returns (address);
 }

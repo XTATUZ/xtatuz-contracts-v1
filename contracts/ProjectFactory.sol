@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract ProjectFactory is Ownable {
     function createProject(
         IProjectFactory.CreateProject memory createData
-    ) public payable onlyOwner returns (address) {
+    ) public onlyOwner returns (address) {
         bytes32 salt = keccak256(abi.encode(block.timestamp, msg.sender));
         address projectAddress = address(
             new XtatuzProject{salt: salt}(
