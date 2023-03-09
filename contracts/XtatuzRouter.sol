@@ -22,6 +22,8 @@ contract XtatuzRouter {
     address private _membershipAddress;
     address private _rerollAddress;
     address private _referralAddress;
+    uint256 public constant PULLBACK_PERIOD = 30 days;
+    mapping(uint256 => mapping(address => uint256)) public isNoticeTimestamp;
 
     enum CollectionType {
         PRESALE,
@@ -60,8 +62,9 @@ contract XtatuzRouter {
     event ChangePropertyStatus(uint256 indexed projectId, IProperty.PropertyStatus status);
     event NFTReroll(address indexed member, uint256 projectId, uint256 tokenId);
     event ClaimedRerollFee(address indexed spv, uint256 projectId, uint256 amount);
-    event NoticeToInactiveWallet(uint256 indexed projectId, address inactiveWallet_);
     event PullbackInactive(uint256 indexed projectId, address inactiveWallet_);
+    event NoticeReply(uint256 indexed projectId, address indexed inactiveWallet_, uint256 noticeTimestamp);
+    event NoticeToInactiveWallet(uint256 indexed projectId, address indexed inactiveWallet_, uint256 noticeTimestamp);
 
     modifier onlySpv() {
         require(_spvAddress == msg.sender, "ROUTER: ONLY_SPV");
@@ -282,15 +285,19 @@ contract XtatuzRouter {
         address projectAddress = _xtatuzFactory.getProjectAddress(projectId_);
         require(projectAddress != address(0), "ROUTER: INVALID_PROJECT_ID");
         _isNotice[projectId_][msg.sender] = false;
+        isNoticeTimestamp[projectId_][msg.sender] = block.timestamp;
+        emit NoticeReply(projectId_, msg.sender, block.timestamp);
     }
 
     function noticeToInactiveWallet(uint256 projectId_, address inactiveWallet_) public onlySpv {
         _isNotice[projectId_][inactiveWallet_] = true;
-        emit NoticeToInactiveWallet(projectId_, inactiveWallet_);
+        isNoticeTimestamp[projectId_][inactiveWallet_] = block.timestamp + PULLBACK_PERIOD;
+        emit NoticeToInactiveWallet(projectId_, inactiveWallet_, block.timestamp);
     }
 
     function pullbackInactive(uint256 projectId_, address inactiveWallet_) public onlySpv {
         require(_isNotice[projectId_][inactiveWallet_] == true, "ROUTER: NOTICE_BEFORE");
+        require(isNoticeTimestamp[projectId_][inactiveWallet_] < block.timestamp, "ROUTER: IN_NOTICE_PERIOD");
         address propertyAddress = _xtatuzFactory.getPropertyAddress(projectId_);
         IProperty property = IProperty(propertyAddress);
         uint256[] memory nftList = property.getTokenIdList(inactiveWallet_);
