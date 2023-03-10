@@ -98,7 +98,7 @@ contract XtatuzReferral is Ownable {
         }
 
         buyerAgentAmount[referral_][projectId_] += referralAmount;
-        updateReferralAmount(projectId_, amount_);
+        updateReferralAmount(projectId_, referralAmount);
         emit IncreaseBuyerRef(projectId_, referralAmount);
     }
 
