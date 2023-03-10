@@ -28,6 +28,7 @@ contract XtatuzReferral is Ownable {
     address private _operatorAddress;
     address public tokenAddress;
 
+    uint256 public maxPercentage = 5;
     uint256 public defaultPercentage = 3;
 
     constructor(address tokenAddress_, uint256[] memory initialPercentage_) {
@@ -40,6 +41,7 @@ contract XtatuzReferral is Ownable {
     event OperatorTransfered(address indexed prevOperator, address indexed newSpv);
     event GenerateReferral(address indexed agentAddress, string indexed referral);
     event ChangeDefaultPercent(uint256 prevPercent, uint256 newPercent);
+    event ChangeMaxPercent(uint256 prevPercent, uint256 newPercent);
     event IncreaseBuyerRef(uint256 indexed projectId, uint256 referralAmount);
     event SetReferralLevels(uint256[] preLevels, uint256[] newLevels);
     event SetLevel(uint256 projectId, string indexed referral, uint256 level);
@@ -116,10 +118,17 @@ contract XtatuzReferral is Ownable {
     }
 
     function setDefaultPercentage(uint256 default_) public onlyOperator {
-        require(default_ > 0, "REFERRAL: NO_ZERO_PERCENT");
+        require(default_ > 0 && default_ <= maxPercentage, "REFERRAL: INVALID_PERCENT");
         uint256 prev = defaultPercentage;
         defaultPercentage = default_;
         emit ChangeDefaultPercent(prev, default_);
+    }
+
+    function setMaxPercentage(uint256 max_) public onlyOperator {
+        require(max_ > 0, "REFERRAL: INVALID_PERCENT");
+        uint256 prev = maxPercentage;
+        maxPercentage = max_;
+        emit ChangeMaxPercent(prev, max_);
     }
 
     function setLevel(uint projectId_, string memory referral_, uint level_) public onlyOperator {
@@ -132,7 +141,9 @@ contract XtatuzReferral is Ownable {
         uint256[] memory prevLevels = new uint256[](3);
         uint256[] memory newLevels = new uint256[](3);
         require(percentagePerLevel_.length == 3, "REFERRAL: 3_LEVELS");
+        require(percentagePerLevel_[0] < percentagePerLevel_[1] && percentagePerLevel_[1] < percentagePerLevel_[2], "REFERRAL: INVALID_PERCENT_LEVELS");
         for(uint256 i = 0; i < percentagePerLevel_.length ; i++){
+            require(percentagePerLevel_[i] > 0 && percentagePerLevel_[i] <= maxPercentage, "REFERRAL: INVALID_PERCENT");
             prevLevels[i] = levelsPercentage[i + 1];
             levelsPercentage[i + 1] = percentagePerLevel_[i];
             newLevels[i] = levelsPercentage[i + 1];
