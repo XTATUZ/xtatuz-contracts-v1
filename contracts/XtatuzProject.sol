@@ -34,6 +34,7 @@ contract XtatuzProject is Ownable, Pausable {
     bool private _isTriggedEndpresale;
 
     address[] public projectMember;
+    mapping(address => bool) public memberExists;
     mapping(address => uint256[]) public getMemberedNFTList;
 
     mapping(address => bool) private _multiSigMint;
@@ -142,6 +143,11 @@ contract XtatuzProject is Ownable, Pausable {
         _pickupAvailableNFT(nftList_, member_);
 
         countReserve -= amount;
+
+        if (memberExists[member_] == false) {
+            memberExists[member_] = true;
+            projectMember.push(member_);
+        }
 
         projectMember.push(member_);
 
