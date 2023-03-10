@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -12,6 +13,7 @@ import "../interfaces/IXtatuzReroll.sol";
 import "../interfaces/IXtatuzReferral.sol";
 
 contract XtatuzRouter {
+    using SafeERC20 for IERC20;
     using Counters for Counters.Counter;
     Counters.Counter private _projectIdCounter;
 
@@ -127,7 +129,7 @@ contract XtatuzRouter {
         referralContract.increaseBuyerRef(projectId_, referral_, amount * minPrice);
 
         address tokenAddress = project.tokenAddress();
-        IERC20(tokenAddress).transferFrom(msg.sender, projectAddress, price);
+        IERC20(tokenAddress).safeTransferFrom(msg.sender, projectAddress, price);
 
         uint256[] memory memberedProject = _memberdProject[msg.sender];
         bool foundedIndex;
@@ -189,7 +191,7 @@ contract XtatuzRouter {
         rerollData[newIndex] = prevUri;
         rerollContract.setRerollData(projectId_, rerollData);
 
-        IERC20(tokenAddress).transferFrom(msg.sender, address(this), fee);
+        IERC20(tokenAddress).safeTransferFrom(msg.sender, address(this), fee);
         _totalRerollFee[projectId_] += fee;
 
         emit NFTReroll(msg.sender, projectId_, tokenId_);
@@ -202,7 +204,7 @@ contract XtatuzRouter {
         address tokenAddress = rerollContract.tokenAddress();
 
         uint256 totalFee = _totalRerollFee[projectId_];
-        IERC20(tokenAddress).transfer(msg.sender, totalFee);
+        IERC20(tokenAddress).safeTransfer(msg.sender, totalFee);
         _totalRerollFee[projectId_] = 0;
         emit ClaimedRerollFee(msg.sender, projectId_, totalFee);
     }

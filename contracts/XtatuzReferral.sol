@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -13,6 +14,8 @@ import "../interfaces/IXtatuzReroll.sol";
 import "../interfaces/IXtatuzRouter.sol";
 
 contract XtatuzReferral is Ownable {
+    using SafeERC20 for IERC20;
+
     mapping(uint256 => uint256) private _referralAmount; // Project ID => Amount
     mapping(string => uint[]) public projectIdsByReferral;
     mapping(string => address) public addressByReferral;
@@ -109,7 +112,7 @@ contract XtatuzReferral is Ownable {
         uint256 amount = buyerAgentAmount[referral_][projectId_];
         buyerAgentAmount[referral_][projectId_] = 0;
 
-        IERC20(tokenAddress).transfer(msg.sender, amount);
+        IERC20(tokenAddress).safeTransfer(msg.sender, amount);
     }
 
     function setDefaultPercentage(uint256 default_) public onlyOperator {

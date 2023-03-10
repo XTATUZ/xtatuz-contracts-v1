@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -11,6 +12,8 @@ import "../interfaces/IXtatuzRouter.sol";
 import "../interfaces/IXtatuzProject.sol";
 
 contract XtatuzProject is Ownable, Pausable {
+    using SafeERC20 for IERC20;
+
     address private _operatorAddress;
     address private _trusteeAddress;
     address private _projectOwner;
@@ -179,7 +182,7 @@ contract XtatuzProject is Ownable, Pausable {
         IPresaled(_presaledAddress).burn(tokenList);
 
         uint256 totalToken = getMemberedNFTList[member_].length * minPrice;
-        IERC20(tokenAddress).transfer(member_, totalToken);
+        IERC20(tokenAddress).safeTransfer(member_, totalToken);
     }
 
     function finishProject(address xtatuzWallet_) public isFullReserve whenNotPaused onlyOperator {
@@ -190,9 +193,9 @@ contract XtatuzProject is Ownable, Pausable {
 
         uint256 referralAmount = (((count - countReserve) * minPrice) * 5) / 100;
         uint256 xtatuzAmount = ((count * minPrice) * 10) / 100;
-        IERC20(tokenAddress).transfer(_projectOwner, projectValue - xtatuzAmount);
-        IERC20(tokenAddress).transfer(referralAddress, referralAmount);
-        IERC20(tokenAddress).transfer(xtatuzWallet_, xtatuzAmount - referralAmount);
+        IERC20(tokenAddress).safeTransfer(_projectOwner, projectValue - xtatuzAmount);
+        IERC20(tokenAddress).safeTransfer(referralAddress, referralAmount);
+        IERC20(tokenAddress).safeTransfer(xtatuzWallet_, xtatuzAmount - referralAmount);
 
         emit FinishProject(projectId, xtatuzWallet_);
     }
