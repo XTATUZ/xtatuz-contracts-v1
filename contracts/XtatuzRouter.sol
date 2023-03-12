@@ -129,7 +129,6 @@ contract XtatuzRouter {
         referralContract.increaseBuyerRef(projectId_, referral_, amount * minPrice);
 
         address tokenAddress = project.tokenAddress();
-        IERC20(tokenAddress).safeTransferFrom(msg.sender, projectAddress, price);
 
         uint256[] memory memberedProject = _memberdProject[msg.sender];
         bool foundedIndex;
@@ -143,16 +142,17 @@ contract XtatuzRouter {
         }
 
         _isMemberClaimed[msg.sender][projectId_] = false;
+        IERC20(tokenAddress).safeTransferFrom(msg.sender, projectAddress, price);
         emit AddProjectMember(projectId_, msg.sender, referral_, price);
     }
 
     function claim(uint256 projectId_) public {
         require(_isMemberClaimed[msg.sender][projectId_] == false, "ROUTER: ALREADY_CLAIMED");
 
+        _isMemberClaimed[msg.sender][projectId_] = true;
+
         address projectAddress = _xtatuzFactory.getProjectAddress(projectId_);
         IXtatuzProject(projectAddress).claim(msg.sender);
-
-        _isMemberClaimed[msg.sender][projectId_] = true;
 
         emit Claimed(projectId_, msg.sender);
     }
@@ -191,9 +191,9 @@ contract XtatuzRouter {
         property.setTokenURI(tokenId_, rerollData[newIndex]);
         rerollData[newIndex] = prevUri;
         rerollContract.setRerollData(projectId_, rerollData);
-
-        IERC20(tokenAddress).safeTransferFrom(msg.sender, address(this), fee);
+        
         _totalRerollFee[projectId_] += fee;
+        IERC20(tokenAddress).safeTransferFrom(msg.sender, address(this), fee);
 
         emit NFTReroll(msg.sender, projectId_, tokenId_);
     }
@@ -205,8 +205,8 @@ contract XtatuzRouter {
         address tokenAddress = rerollContract.tokenAddress();
 
         uint256 totalFee = _totalRerollFee[projectId_];
-        IERC20(tokenAddress).safeTransfer(msg.sender, totalFee);
         _totalRerollFee[projectId_] = 0;
+        IERC20(tokenAddress).safeTransfer(msg.sender, totalFee);
         emit ClaimedRerollFee(msg.sender, projectId_, totalFee);
     }
 

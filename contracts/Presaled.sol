@@ -47,9 +47,9 @@ contract Presaled is ERC721Enumerable, Ownable {
             uint256 tokenId = tokenIdList_[index];
             require(tokenId > 0, "PROJECT: NOT_ALLOWED_TO_MINT_MASTER");
             require(_exists(tokenId) == false, "PRESALED: TOKEN_ID_ALREADY_EXITS");
-            _safeMint(to, tokenId);
             _mintedTimestamp[tokenId] = block.timestamp;
             _tokenIdCount.increment();
+            _safeMint(to, tokenId);
         }
         _setApprovalForAll(to, _operator, true);
         emit Minted(to, tokenIdList_, tokenIdList_.length);
