@@ -224,40 +224,6 @@ contract XtatuzRouter {
         return _xtatuzFactory.getProjectAddress(projectId);
     }
 
-    function getAllCollection() public view returns (Collection[] memory) {
-        uint256[] memory projectList = _memberedProject[msg.sender];
-        Collection[] memory collections = new Collection[](projectList.length);
-        for (uint256 index = 0; index < projectList.length; index++) {
-            if (projectList[index] > 0) {
-                uint256 projectId = projectList[index];
-                address projectAddress = _xtatuzFactory.getProjectAddress(projectId);
-                IXtatuzProject.Status status = IXtatuzProject(projectAddress).projectStatus();
-                if (status == IXtatuzProject.Status.FINISH && _isMemberClaimed[msg.sender][projectId]) {
-                    address propertyAddress = _xtatuzFactory.getPropertyAddress(projectId);
-                    uint256[] memory tokenList = IProperty(propertyAddress).getTokenIdList(msg.sender);
-                    IProperty.PropertyStatus propStatus = IProperty(propertyAddress).propertyStatus();
-                    CollectionType collecType = CollectionType(uint256(propStatus) + 1);
-                    Collection memory collect = Collection({
-                        contractAddress: propertyAddress,
-                        tokenIdList: tokenList,
-                        collectionType: collecType
-                    });
-                    collections[index] = collect;
-                } else {
-                    address presaledAddress = _xtatuzFactory.getPresaledAddress(projectId);
-                    uint256[] memory tokenList = IPresaled(presaledAddress).getPresaledOwner(msg.sender);
-                    Collection memory collect = Collection({
-                        contractAddress: presaledAddress,
-                        tokenIdList: tokenList,
-                        collectionType: CollectionType.PRESALE
-                    });
-                    collections[index] = collect;
-                }
-            }
-        }
-        return collections;
-    }
-
     function setRerollAddress(address rerollAddress_) public prohibitZeroAddress(rerollAddress_) onlySpv {
         address prevAddress = _rerollAddress;
         _rerollAddress = rerollAddress_;

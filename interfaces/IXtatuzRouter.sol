@@ -46,8 +46,6 @@ interface IXtatuzRouter {
 
     function getProjectAddressById(uint256 projectId) external view returns (address);
 
-    function getAllCollection() external returns(Collection[] memory);
-
     function setRerollAddress(address rerollAddress_) external;
 
     function setReferralAddress(address referralAddress_) external;

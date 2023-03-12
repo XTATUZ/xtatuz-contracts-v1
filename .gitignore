@@ -9,4 +9,5 @@ cache
 artifacts
 
 scripts/main.ts
+scripts/refund.ts
 address
