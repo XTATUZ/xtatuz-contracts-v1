@@ -8,7 +8,8 @@ interface IXtatuzProject {
         AVAILABLE,
         FINISH,
         REFUND,
-        UNAVAILABLE
+        UNAVAILABLE,
+        PREPARE_FINISH
     }
 
     struct ProjectData {

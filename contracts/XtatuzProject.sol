@@ -179,6 +179,7 @@ contract XtatuzProject is Ownable {
     }
 
     function finishProject(address xtatuzWallet_) public isFullReserve onlyOperator {
+        require(projectStatus() == IXtatuzProject.Status.PREPARE_FINISH, "PROJECT: NOT_READY_TO_FINISH");
         _multiSigMint[msg.sender] = true;
         require(
             _multiSigMint[_operatorAddress] && _multiSigMint[_trusteeAddress],
@@ -231,12 +232,14 @@ contract XtatuzProject is Ownable {
     }
 
     function projectStatus() public view returns (IXtatuzProject.Status status) {
-        if (!isFinished && block.timestamp >= startPresale && block.timestamp <= endPresale && countReserve > 0) {
-            return IXtatuzProject.Status.AVAILABLE;
-        } else if (countReserve == 0 || isFinished) {
+        if (isFinished) {
             return IXtatuzProject.Status.FINISH;
-        } else if (block.timestamp > endPresale && countReserve > 0) {
+        } else if (countReserve == 0 || _underwriteCount >= countReserve) {
+            return IXtatuzProject.Status.PREPARE_FINISH;
+        } else if (block.timestamp > endPresale && countReserve > 0 && !(_underwriteCount >= countReserve)) {
             return IXtatuzProject.Status.REFUND;
+        } else if (!isFinished && block.timestamp >= startPresale && block.timestamp <= endPresale) {
+            return IXtatuzProject.Status.AVAILABLE;
         } else {
             return IXtatuzProject.Status.UNAVAILABLE;
         }
