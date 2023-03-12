@@ -183,6 +183,7 @@ contract XtatuzRouter {
         string memory prevUri = property.tokenURI(tokenId_);
         uint256 fee = rerollContract.rerollFee();
         string[] memory rerollData = rerollContract.getRerollData(projectId_);
+        require(rerollData.length > 0, "ROUTER: NO_REROLL_DATA");
         address tokenOwner = property.ownerOf(tokenId_);
         require(tokenOwner == msg.sender, "ROUTER: NOT_NFT_OWNER");
 
