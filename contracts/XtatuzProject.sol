@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity  0.8.17;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -179,11 +179,17 @@ contract XtatuzProject is Ownable {
     }
 
     function finishProject(address xtatuzWallet_) public isFullReserve onlyOperator {
-        address referralAddress = IXtatuzRouter(owner()).referralAddress();
+        _multiSigMint[msg.sender] = true;
+        require(
+            _multiSigMint[_operatorAddress] && _multiSigMint[_trusteeAddress],
+            "PROJECT: NOT_ALLOWS_BY_MULTISIGMINT"
+        );
 
         isFinished = true;
-        multiSigMint();
+        checkCanClaim = true;
+        IProperty(_propertyAddress).mintMaster();
 
+        address referralAddress = IXtatuzRouter(owner()).referralAddress();
         uint256 referralAmount = (((count - countReserve) * minPrice) * 5) / 100;
         uint256 xtatuzAmount = ((count * minPrice) * 10) / 100;
         IERC20(tokenAddress).safeTransfer(_projectOwner, projectValue - xtatuzAmount);
@@ -202,11 +208,6 @@ contract XtatuzProject is Ownable {
 
     function multiSigMint() public isFullReserve spvAndTrustee {
         _multiSigMint[msg.sender] = true;
-
-        if (_multiSigMint[_operatorAddress] && _multiSigMint[_trusteeAddress]) {
-            IProperty(_propertyAddress).mintMaster();
-            checkCanClaim = true;
-        }
     }
 
     function multiSigBurn() public isFullReserve spvAndTrustee {
