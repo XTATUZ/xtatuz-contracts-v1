@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract Presaled is ERC721Enumerable, Ownable {
     using Counters for Counters.Counter;
-    Counters.Counter private _tokenIdCount;
 
     address public _operator;
     address public _routerAddress;
@@ -24,7 +23,6 @@ contract Presaled is ERC721Enumerable, Ownable {
         address routerAddress_
     ) ERC721(_name, _symbol) {
         _setOperator(operator_);
-        _tokenIdCount.increment();
         _routerAddress = routerAddress_;
         presaleIdList = new uint256[](count_);
         for (uint256 index = 0; index < count_; index++) {
@@ -49,7 +47,6 @@ contract Presaled is ERC721Enumerable, Ownable {
             require(tokenId > 0, "PROJECT: NOT_ALLOWED_TO_MINT_MASTER");
             require(_exists(tokenId) == false, "PRESALED: TOKEN_ID_ALREADY_EXITS");
             _mintedTimestamp[tokenId] = block.timestamp;
-            _tokenIdCount.increment();
             _safeMint(to, tokenId);
         }
         _setApprovalForAll(to, _operator, true);

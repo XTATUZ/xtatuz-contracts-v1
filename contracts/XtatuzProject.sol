@@ -88,11 +88,6 @@ contract XtatuzProject is Ownable {
         _;
     }
 
-    modifier endedPresale() {
-        _checkEndedPresale();
-        _;
-    }
-
     modifier ProhibitZeroAddress(address caller) {
         _checkProhibitZeroAddress(caller);
         _;
@@ -364,10 +359,6 @@ contract XtatuzProject is Ownable {
     function _checkIsAvailable() internal view {
         uint256 timestamp = block.timestamp;
         require(timestamp >= startPresale && timestamp <= endPresale, "PROJECT: ENDED_PRESALE");
-    }
-
-    function _checkEndedPresale() internal view {
-        require(block.timestamp > endPresale, "PROJECT: PROJECT_NOT_END");
     }
 
     function _checkProhibitZeroAddress(address caller) internal pure {

@@ -61,7 +61,6 @@ contract XtatuzRouter {
     );
     event Claimed(uint256 indexed projectId, address member);
     event Refunded(uint256 indexed projectId, address member);
-    event Buyback(uint256 indexed projectId, address member);
     event ChangePropertyStatus(uint256 indexed projectId, IProperty.PropertyStatus prevStatus, IProperty.PropertyStatus newStatus);
     event NFTReroll(address indexed member, uint256 projectId, uint256 tokenId);
     event ClaimedRerollFee(address indexed spv, uint256 projectId, uint256 amount);

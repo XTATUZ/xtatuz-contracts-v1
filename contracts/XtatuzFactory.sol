@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity  0.8.17;
 
-import "./XtatuzProject.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../interfaces/IPropertyFactory.sol";
 import "../interfaces/IPresaledFactory.sol";

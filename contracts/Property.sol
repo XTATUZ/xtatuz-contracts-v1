@@ -5,8 +5,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "../interfaces/IProperty.sol";
-import "../interfaces/IXtatuzProject.sol";
-import "../interfaces/IPresaled.sol";
 
 contract Property is ERC721Enumerable, Ownable {
     using Strings for uint256;

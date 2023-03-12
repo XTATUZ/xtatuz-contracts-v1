@@ -2,7 +2,6 @@
 pragma solidity  0.8.17;
 
 import "./Property.sol";
-import "../interfaces/IProperty.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract PropertyFactory is Ownable {

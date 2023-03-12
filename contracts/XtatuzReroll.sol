@@ -1,18 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity  0.8.17;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../interfaces/IProperty.sol";
 import "../interfaces/IXtatuzFactory.sol";
-import "../interfaces/IXtatuzRouter.sol";
 
 contract XtatuzReroll is Ownable {
-    IXtatuzFactory _xtatusFactory;
 
     mapping(uint256 => string[]) public rerollData;
     uint256 public rerollFee = 10 * (10 ** 18);
-    uint256 private _totalFee;
     address public _operator;
     address public _routerAddress;
 
