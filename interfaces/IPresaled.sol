@@ -12,8 +12,6 @@ interface IPresaled {
 
     function getMintedTimestamp(uint tokenId) external view returns (uint);
 
-    function getPresaledPackage(uint tokenId) external view returns (uint);
-
     function transferOwnership(address owner) external;
 
     function setBaseURI(string memory baseURI_) external;

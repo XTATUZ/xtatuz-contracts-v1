@@ -44,11 +44,7 @@ interface IXtatuzRouter {
 
     function referralAddress() external view returns (address);
 
-    function refferalAmount(string memory referral_) external returns(uint256);
-
     function getProjectAddressById(uint256 projectId) external view returns (address);
-
-    function getMembershipAddress() external view returns (address);
 
     function getAllCollection() external returns(Collection[] memory);
 
@@ -65,4 +61,6 @@ interface IXtatuzRouter {
     function noticeToInactiveWallet(uint256 projectId_, address inactiveWallet_) external;
 
     function pullbackInactive(uint256 projectId_, address inactiveWallet_) external;
+
+    function setMembershipAddress(address membershipAddress_) external;
 }

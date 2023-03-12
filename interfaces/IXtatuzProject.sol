@@ -75,4 +75,6 @@ interface IXtatuzProject {
 
     function extendEndPresale() external;
 
+    function getUnavailableNFT() external view returns (uint256[] memory);
+
 }
