@@ -45,6 +45,7 @@ contract XtatuzRouter {
     mapping(uint256 => mapping(address => bool)) private _isNotice;
 
     constructor(address spv_, address factoryAddress_) {
+        require(spv_ != address(0) && factoryAddress_ != address(0), "ROUTER: INVALID ADDRESS");
         _transferSpv(spv_);
         _xtatuzFactory = IXtatuzFactory(factoryAddress_);
         _projectIdCounter.increment();
