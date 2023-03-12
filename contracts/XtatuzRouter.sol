@@ -62,7 +62,7 @@ contract XtatuzRouter {
     event Claimed(uint256 indexed projectId, address member);
     event Refunded(uint256 indexed projectId, address member);
     event Buyback(uint256 indexed projectId, address member);
-    event ChangePropertyStatus(uint256 indexed projectId, IProperty.PropertyStatus status);
+    event ChangePropertyStatus(uint256 indexed projectId, IProperty.PropertyStatus prevStatus, IProperty.PropertyStatus newStatus);
     event NFTReroll(address indexed member, uint256 projectId, uint256 tokenId);
     event ClaimedRerollFee(address indexed spv, uint256 projectId, uint256 amount);
     event PullbackInactive(uint256 indexed projectId, address inactiveWallet_);
@@ -111,7 +111,6 @@ contract XtatuzRouter {
             endPresale_: endPresale_
         });
         address projectAddress = _xtatuzFactory.createProjectContract(data);
-        // IXtatuzProject(projectAddress).setPresalePeriod(startPresale_, endPresale_);
         emit CreatedProject(projectId, projectAddress);
     }
 
@@ -269,10 +268,11 @@ contract XtatuzRouter {
         _referralAddress = referralAddress_;
     }
 
-    function setPropertyStatus(uint256 projectId_, IProperty.PropertyStatus status) public onlySpv {
+    function setPropertyStatus(uint256 projectId_, IProperty.PropertyStatus newStatus) public onlySpv {
         address propertyAddress = _xtatuzFactory.getPropertyAddress(projectId_);
-        IProperty(propertyAddress).setPropertyStatus(status);
-        emit ChangePropertyStatus(projectId_, status);
+        IProperty.PropertyStatus prevStatus = IProperty(propertyAddress).propertyStatus();
+        IProperty(propertyAddress).setPropertyStatus(newStatus);
+        emit ChangePropertyStatus(projectId_, prevStatus, newStatus);
     }
 
     function _transferSpv(address newSpv_) internal prohibitZeroAddress(newSpv_) {
