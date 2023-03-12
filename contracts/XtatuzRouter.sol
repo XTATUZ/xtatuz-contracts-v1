@@ -39,7 +39,7 @@ contract XtatuzRouter {
         CollectionType collectionType;
     }
 
-    mapping(address => uint256[]) private _memberdProject;
+    mapping(address => uint256[]) private _memberedProject;
     mapping(address => mapping(uint256 => bool)) private _isMemberClaimed;
     mapping(uint256 => uint256) private _totalRerollFee;
     mapping(uint256 => mapping(address => bool)) public _isNotice;
@@ -132,7 +132,7 @@ contract XtatuzRouter {
 
         address tokenAddress = project.tokenAddress();
 
-        uint256[] memory memberedProject = _memberdProject[msg.sender];
+        uint256[] memory memberedProject = _memberedProject[msg.sender];
         bool foundedIndex;
         for (uint256 index = 0; index < memberedProject.length; index++) {
             if (memberedProject[index] == projectId_) {
@@ -140,7 +140,7 @@ contract XtatuzRouter {
             }
         }
         if (!foundedIndex) {
-            _memberdProject[msg.sender].push(projectId_);
+            _memberedProject[msg.sender].push(projectId_);
         }
 
         _isMemberClaimed[msg.sender][projectId_] = false;
@@ -160,12 +160,12 @@ contract XtatuzRouter {
     }
 
     function refund(uint256 projectId_) public {
-        uint256[] memory memberedProject = _memberdProject[msg.sender];
+        uint256[] memory memberedProject = _memberedProject[msg.sender];
         address projectAddress = _xtatuzFactory.getProjectAddress(projectId_);
 
         for (uint256 index = 0; index < memberedProject.length; index++) {
             if (memberedProject[index] == projectId_) {
-                delete _memberdProject[msg.sender][index];
+                delete _memberedProject[msg.sender][index];
             }
         }
 
@@ -225,7 +225,7 @@ contract XtatuzRouter {
     }
 
     function getAllCollection() public view returns (Collection[] memory) {
-        uint256[] memory projectList = _memberdProject[msg.sender];
+        uint256[] memory projectList = _memberedProject[msg.sender];
         Collection[] memory collections = new Collection[](projectList.length);
         for (uint256 index = 0; index < projectList.length; index++) {
             if (projectList[index] > 0) {
