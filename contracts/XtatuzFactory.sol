@@ -23,6 +23,10 @@ contract XtatuzFactory is Ownable {
     address public _presaledFactory;
     address public _projectFactory;
 
+    event CreatePresale(uint256 projectId, address presaleAddress);
+    event CreateProperty(uint256 projectId, address presaleAddress);
+    event CreateProjectContract(uint256 projectId, address projectAddress);
+
     constructor(
         address propertyFactory_,
         address presaledFactory_,
@@ -64,6 +68,8 @@ contract XtatuzFactory is Ownable {
             owner(),
             projectData.count_
         );
+        emit CreateProperty(projectData.projectId_, propertyAddress);
+
         address presaledAddress = presaledFactory.createPresale(
             projectData.name_,
             projectData.symbol_,
@@ -72,6 +78,7 @@ contract XtatuzFactory is Ownable {
             tx.origin, // operator
             owner()
         );
+        emit CreatePresale(projectData.projectId_, presaledAddress);
 
         IProjectFactory.CreateProject memory projectFactoryData = IProjectFactory.CreateProject({
             projectId_: projectData.projectId_,
@@ -99,6 +106,7 @@ contract XtatuzFactory is Ownable {
         getPropertyAddress[projectData.projectId_] = propertyAddress;
         getPresaledAddress[projectData.projectId_] = presaledAddress;
 
+        emit CreateProjectContract(projectData.projectId_, propertyAddress);
         return projectAddress;
     }
 }

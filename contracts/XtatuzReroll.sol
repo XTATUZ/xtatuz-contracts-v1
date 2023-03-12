@@ -31,6 +31,9 @@ contract XtatuzReroll is Ownable {
         _;
     }
 
+    event SetRerollData(uint256 projectId_, string[] rerollData_);
+    event SetFee(uint256 prevFee_, uint256 newFee);
+
     constructor(
         address operator_,
         address routerAddress_,
@@ -44,10 +47,13 @@ contract XtatuzReroll is Ownable {
     function setRerollData(uint256 projectId_, string[] memory rerollData_) public onlyOperator {
         require(rerollData_.length > 0, "REROLL: OUT_OF_DATA");
         rerollData[projectId_] = rerollData_;
+        emit SetRerollData(projectId_, rerollData_);
     }
 
     function setFee(uint256 fee_) public onlyOperator {
+        uint256 prevFee = rerollFee;
         rerollFee = fee_;
+        emit SetFee(prevFee, fee_);
     }
 
     function getRerollData(uint256 projectId_) public view returns (string[] memory) {

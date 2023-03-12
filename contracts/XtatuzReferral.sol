@@ -40,12 +40,14 @@ contract XtatuzReferral is Ownable {
     }
 
     event OperatorTransfered(address indexed prevOperator, address indexed newSpv);
-    event GenerateReferral(address indexed agentAddress, string indexed referral);
+    event GenerateReferral(address indexed agentAddress, string referral);
     event ChangeDefaultPercent(uint256 prevPercent, uint256 newPercent);
     event ChangeMaxPercent(uint256 prevPercent, uint256 newPercent);
     event IncreaseBuyerRef(uint256 indexed projectId, uint256 referralAmount);
     event SetReferralLevels(uint256[] preLevels, uint256[] newLevels);
-    event SetLevel(uint256 projectId, string indexed referral, uint256 level);
+    event SetLevel(uint256 projectId, string referral, uint256 level);
+    event UpdateReferralAmount(uint256 indexed projectId, uint256 amount_);
+    event Claim(uint256 indexed projectId_, string referral_, uint256 amount );
 
     modifier onlyOperator() {
         _checkOnlyOperator();
@@ -64,6 +66,7 @@ contract XtatuzReferral is Ownable {
 
     function updateReferralAmount(uint256 projectId_, uint256 amount_) public onlyOperator {
         _referralAmount[projectId_] += amount_;
+        emit UpdateReferralAmount(projectId_, amount_);
     }
 
     function getRefferralAmount(uint256 projectId_) public view returns (uint256) {
@@ -122,6 +125,7 @@ contract XtatuzReferral is Ownable {
         buyerAgentAmount[referral_][projectId_] = 0;
 
         IERC20(tokenAddress).safeTransfer(msg.sender, amount);
+        emit Claim(projectId_, referral_, amount);
     }
 
     function setDefaultPercentage(uint256 default_) public onlyOperator {

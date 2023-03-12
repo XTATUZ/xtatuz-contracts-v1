@@ -68,6 +68,9 @@ contract XtatuzRouter {
     event PullbackInactive(uint256 indexed projectId, address inactiveWallet_);
     event NoticeReply(uint256 indexed projectId, address indexed inactiveWallet_, uint256 noticeTimestamp);
     event NoticeToInactiveWallet(uint256 indexed projectId, address indexed inactiveWallet_, uint256 noticeTimestamp);
+    event SetRerollAddress(address prevAddress, address newAddress);
+    event SetMembershipAddress(address prevAddress, address newAddress);
+    event SetReferralAddress(address prevAddress, address newAddress);
 
     modifier onlySpv() {
         require(_spvAddress == msg.sender, "ROUTER: ONLY_SPV");
@@ -257,15 +260,21 @@ contract XtatuzRouter {
     }
 
     function setRerollAddress(address rerollAddress_) public prohibitZeroAddress(rerollAddress_) onlySpv {
+        address prevAddress = _rerollAddress;
         _rerollAddress = rerollAddress_;
+        emit SetRerollAddress(prevAddress, rerollAddress_);
     }
 
     function setMembershipAddress(address membershipAddress_) public prohibitZeroAddress(membershipAddress_) onlySpv {
+        address prevAddress = _membershipAddress;
         _membershipAddress = membershipAddress_;
+        emit SetMembershipAddress(prevAddress, membershipAddress_);
     }
 
     function setReferralAddress(address referralAddress_) public prohibitZeroAddress(referralAddress_) onlySpv {
+        address prevAddress = _referralAddress;
         _referralAddress = referralAddress_;
+        emit SetReferralAddress(prevAddress, referralAddress_);
     }
 
     function setPropertyStatus(uint256 projectId_, IProperty.PropertyStatus newStatus) public onlySpv {

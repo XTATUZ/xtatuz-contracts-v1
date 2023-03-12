@@ -39,6 +39,7 @@ contract Presaled is ERC721Enumerable, Ownable {
 
     event Minted(address indexed to, uint256[] nftList, uint256 amount);
     event Burned(uint256[] indexed tokenIdList_);
+    event SetBaseURI(string prevBaseURI_, string newBaseURI_);
 
     function mint(address to, uint256[] memory tokenIdList_) public onlyOwner {
         require(to != address(0), "PRESALED: RECIEVER_ADDRESS_IS_0");
@@ -77,7 +78,10 @@ contract Presaled is ERC721Enumerable, Ownable {
     }
 
     function setBaseURI(string memory baseURI_) public onlyOperator {
+        string memory prevBaseURI = baseURI;
         _setBaseURI(baseURI_);
+        
+        emit SetBaseURI(prevBaseURI, baseURI_);
     }
 
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
