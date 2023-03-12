@@ -5,13 +5,12 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
 import "../interfaces/IProperty.sol";
 import "../interfaces/IPresaled.sol";
 import "../interfaces/IXtatuzRouter.sol";
 import "../interfaces/IXtatuzProject.sol";
 
-contract XtatuzProject is Ownable, Pausable {
+contract XtatuzProject is Ownable {
     using SafeERC20 for IERC20;
 
     address private _operatorAddress;
@@ -128,7 +127,6 @@ contract XtatuzProject is Ownable, Pausable {
         public
         isAvailable
         isLeftReserve
-        whenNotPaused
         onlyOwner
         returns (uint256)
     {
@@ -160,7 +158,7 @@ contract XtatuzProject is Ownable, Pausable {
         return price;
     }
 
-    function claim(address member_) public onlyOwner whenNotPaused {
+    function claim(address member_) public onlyOwner {
         uint256[] memory tokenList = IPresaled(_presaledAddress).getPresaledOwner(member_);
         require(tokenList.length > 0, "PROJECT: TOKENLIST_ZERO");
         require(projectStatus() == IXtatuzProject.Status.FINISH, "PROJECT: PROJECT_UNFINISH");
@@ -175,7 +173,7 @@ contract XtatuzProject is Ownable, Pausable {
         property.mintFragment(member_, tokenList);
     }
 
-    function refund(address member_) public onlyOwner whenNotPaused {
+    function refund(address member_) public onlyOwner {
         uint256[] memory tokenList = IPresaled(_presaledAddress).getPresaledOwner(member_);
         require(projectStatus() == IXtatuzProject.Status.REFUND, "PROJECT: PROJECT_UNREFUNDED");
 
@@ -185,7 +183,7 @@ contract XtatuzProject is Ownable, Pausable {
         IERC20(tokenAddress).safeTransfer(member_, totalToken);
     }
 
-    function finishProject(address xtatuzWallet_) public isFullReserve whenNotPaused onlyOperator {
+    function finishProject(address xtatuzWallet_) public isFullReserve onlyOperator {
         address referralAddress = IXtatuzRouter(owner()).referralAddress();
 
         isFinished = true;
@@ -271,42 +269,37 @@ contract XtatuzProject is Ownable, Pausable {
         return projectData;
     }
 
-    function transferProjectOwner(address newProjectOwner_) public whenNotPaused onlyProjectOwner {
+    function transferProjectOwner(address newProjectOwner_) public onlyProjectOwner {
         _transferProjectOwner(newProjectOwner_);
     }
 
-    function transferOperator(address newOperator_) public whenNotPaused onlyOperator {
+    function transferOperator(address newOperator_) public onlyOperator {
         _transferOperator(newOperator_);
     }
 
-    function transferTrustee(address newTrustee_) public whenNotPaused onlyOperator {
+    function transferTrustee(address newTrustee_) public onlyOperator {
         _transferTrustee(newTrustee_);
     }
 
     function _extendEndPresale() internal {
+        require(
+            block.timestamp > (endPresale - 1 days) && block.timestamp < endPresale,
+            "PROJECT: ONLY_THE_EXTENDING_PERIOD"
+        );
         require(_isTriggedEndpresale == false, "PROJECT: EXTENED_PRESALE");
-        if (block.timestamp > (endPresale - 1 days)) {
-            uint256 absoluteCount = count - _underwriteCount;
-            uint256 percent = ((count - countReserve) * 100) / absoluteCount;
-            if (percent >= 95) {
-                endPresale += 5 days;
-            } else if (percent >= 85 && percent < 95) {
-                endPresale += 10 days;
-            } else if (percent >= 65 && percent < 85) {
-                endPresale += 15 days;
-            } else {
-                endPresale += 30 days;
-            }
-            _isTriggedEndpresale = true;
+
+        uint256 absoluteCount = count - _underwriteCount;
+        uint256 percent = ((count - countReserve) * 100) / absoluteCount;
+        if (percent >= 95) {
+            endPresale += 5 days;
+        } else if (percent >= 85 && percent < 95) {
+            endPresale += 10 days;
+        } else if (percent >= 65 && percent < 85) {
+            endPresale += 15 days;
+        } else {
+            endPresale += 30 days;
         }
-    }
-
-    function pause() public onlyOperator {
-        _pause();
-    }
-
-    function unpause() public onlyOperator {
-        _unpause();
+        _isTriggedEndpresale = true;
     }
 
     function _transferOperator(address newOperator_) internal ProhibitZeroAddress(newOperator_) {
