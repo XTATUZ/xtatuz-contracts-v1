@@ -358,7 +358,7 @@ contract XtatuzProject is Ownable {
 
     function _checkIsAvailable() internal view {
         uint256 timestamp = block.timestamp;
-        require(timestamp >= startPresale && timestamp <= endPresale, "PROJECT: ENDED_PRESALE");
+        require(timestamp >= startPresale && timestamp <= endPresale, "PROJECT: UNAVAILABLE");
     }
 
     function _checkProhibitZeroAddress(address caller) internal pure {

@@ -66,7 +66,7 @@ contract Property is ERC721Enumerable, Ownable {
         uint256 amount = tokenIdList.length;
         for (uint256 index = 0; index < amount; index++) {
             uint256 tokenId = tokenIdList[index];
-            require(_exists(tokenId) == false, "PROJECT: ALREADY_EXITS");
+            require(_exists(tokenId) == false, "PROPERTY: TOKEN_ALREADY_EXITS");
             _safeMint(to, tokenId);
         }
         _setApprovalForAll(to, _routerAddress, true);
