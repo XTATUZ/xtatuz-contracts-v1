@@ -19,9 +19,9 @@ contract XtatuzFactory is Ownable {
     mapping(uint256 => address) public getPresaledAddress;
     mapping(uint256 => address) public getPropertyAddress;
 
-    address private _propertyFactory;
-    address private _presaledFactory;
-    address private _projectFactory;
+    address public _propertyFactory;
+    address public _presaledFactory;
+    address public _projectFactory;
 
     constructor(
         address propertyFactory_,

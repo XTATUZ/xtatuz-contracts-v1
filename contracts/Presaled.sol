@@ -9,9 +9,9 @@ contract Presaled is ERC721Enumerable, Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIdCount;
 
-    address private _operator;
-    address private _routerAddress;
-    string private baseURI;
+    address public _operator;
+    address public _routerAddress;
+    string public baseURI;
     uint256[] public presaleIdList;
 
     mapping(uint256 => uint256) private _mintedTimestamp; // TokenId => Minted Timestamp

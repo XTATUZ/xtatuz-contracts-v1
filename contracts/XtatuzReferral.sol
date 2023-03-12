@@ -26,7 +26,7 @@ contract XtatuzReferral is Ownable {
 
     mapping(uint256 => uint256) public levelsPercentage;
 
-    address private _operatorAddress;
+    address public _operatorAddress;
     address public tokenAddress;
 
     uint256 public maxPercentage = 5;

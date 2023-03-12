@@ -13,8 +13,8 @@ contract XtatuzReroll is Ownable {
     mapping(uint256 => string[]) public rerollData;
     uint256 public rerollFee = 10 * (10 ** 18);
     uint256 private _totalFee;
-    address private _operator;
-    address private _routerAddress;
+    address public _operator;
+    address public _routerAddress;
 
     address public tokenAddress;
 

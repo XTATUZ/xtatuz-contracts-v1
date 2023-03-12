@@ -19,11 +19,11 @@ contract XtatuzRouter {
 
     IXtatuzFactory private _xtatuzFactory;
 
-    address private _spvAddress;
-    address private _xtatuzFactoryAddress;
-    address private _membershipAddress;
-    address private _rerollAddress;
-    address private _referralAddress;
+    address public _spvAddress;
+    address public _xtatuzFactoryAddress;
+    address public _membershipAddress;
+    address public _rerollAddress;
+    address public _referralAddress;
     uint256 public constant PULLBACK_PERIOD = 30 days;
     mapping(uint256 => mapping(address => uint256)) public isNoticeTimestamp;
 
@@ -42,7 +42,7 @@ contract XtatuzRouter {
     mapping(address => uint256[]) private _memberdProject;
     mapping(address => mapping(uint256 => bool)) private _isMemberClaimed;
     mapping(uint256 => uint256) private _totalRerollFee;
-    mapping(uint256 => mapping(address => bool)) private _isNotice;
+    mapping(uint256 => mapping(address => bool)) public _isNotice;
 
     constructor(address spv_, address factoryAddress_) {
         require(spv_ != address(0) && factoryAddress_ != address(0), "ROUTER: INVALID ADDRESS");

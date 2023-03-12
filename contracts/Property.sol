@@ -24,9 +24,9 @@ contract Property is ERC721Enumerable, Ownable {
         count = count_;
     }
 
-    address private _operator;
-    address private _routerAddress;
-    string private baseURI;
+    address public _operator;
+    address public _routerAddress;
+    string public baseURI;
     bool public isMintedMaster;
     uint256 public count;
     IProperty.PropertyStatus public propertyStatus;
