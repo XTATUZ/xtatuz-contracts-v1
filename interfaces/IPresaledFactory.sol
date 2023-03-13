@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity  0.8.17;
 
 import "./IProperty.sol";
 
@@ -11,5 +11,5 @@ interface IPresaledFactory {
         bytes32 _salt,
         address operator_,
         address routerAddress_
-    ) external payable returns (address);
+    ) external returns (address);
 }

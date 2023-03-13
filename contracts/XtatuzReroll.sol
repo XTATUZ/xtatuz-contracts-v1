@@ -1,20 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity  0.8.17;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../interfaces/IProperty.sol";
 import "../interfaces/IXtatuzFactory.sol";
-import "../interfaces/IXtatuzRouter.sol";
 
 contract XtatuzReroll is Ownable {
-    IXtatuzFactory _xtatusFactory;
 
     mapping(uint256 => string[]) public rerollData;
     uint256 public rerollFee = 10 * (10 ** 18);
-    uint256 private _totalFee;
-    address private _operator;
-    address private _routerAddress;
+    address public _operator;
+    address public _routerAddress;
 
     address public tokenAddress;
 
@@ -31,6 +26,9 @@ contract XtatuzReroll is Ownable {
         _;
     }
 
+    event SetRerollData(uint256 projectId_, string[] rerollData_);
+    event SetFee(uint256 prevFee_, uint256 newFee);
+
     constructor(
         address operator_,
         address routerAddress_,
@@ -44,10 +42,13 @@ contract XtatuzReroll is Ownable {
     function setRerollData(uint256 projectId_, string[] memory rerollData_) public onlyOperator {
         require(rerollData_.length > 0, "REROLL: OUT_OF_DATA");
         rerollData[projectId_] = rerollData_;
+        emit SetRerollData(projectId_, rerollData_);
     }
 
     function setFee(uint256 fee_) public onlyOperator {
+        uint256 prevFee = rerollFee;
         rerollFee = fee_;
+        emit SetFee(prevFee, fee_);
     }
 
     function getRerollData(uint256 projectId_) public view returns (string[] memory) {

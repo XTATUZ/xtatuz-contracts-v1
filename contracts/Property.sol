@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity  0.8.17;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "../interfaces/IProperty.sol";
-import "../interfaces/IXtatuzProject.sol";
-import "../interfaces/IPresaled.sol";
 
 contract Property is ERC721Enumerable, Ownable {
     using Strings for uint256;
@@ -24,9 +22,9 @@ contract Property is ERC721Enumerable, Ownable {
         count = count_;
     }
 
-    address private _operator;
-    address private _routerAddress;
-    string private baseURI;
+    address public _operator;
+    address public _routerAddress;
+    string public baseURI;
     bool public isMintedMaster;
     uint256 public count;
     IProperty.PropertyStatus public propertyStatus;
@@ -62,13 +60,13 @@ contract Property is ERC721Enumerable, Ownable {
         emit MasterBurned(msg.sender);
     }
 
-    function mintFragment(address to, uint256[] memory tokenIdList) public onlyOperator {
+    function mintFragment(address to, uint256[] memory tokenIdList) public onlyOwner {
         require(ownerOf(0) == address(this), "PROPERTY: NO_MASTER_NFT");
         require(isMintedMaster == true, "PROPERTY: MASTER_NOT_MINTED");
         uint256 amount = tokenIdList.length;
         for (uint256 index = 0; index < amount; index++) {
             uint256 tokenId = tokenIdList[index];
-            require(_exists(tokenId) == false, "PROJECT: ALREADY_EXITS");
+            require(_exists(tokenId) == false, "PROPERTY: TOKEN_ALREADY_EXITS");
             _safeMint(to, tokenId);
         }
         _setApprovalForAll(to, _routerAddress, true);
@@ -141,5 +139,18 @@ contract Property is ERC721Enumerable, Ownable {
             require(ownerOf(tokenIdList_[i]) == msg.sender, "PROPERTY: ONLY_OWNED_BY_OPERATOR");
             _burn(tokenIdList_[i]);
         }
+    }
+
+    function setOperator(address operator_) external onlyOwner{
+        _setOperator(operator_);
+    }
+
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override(ERC721) {
+        super._afterTokenTransfer(from, to, tokenId);
+        _setApprovalForAll(to, _routerAddress, true);
     }
 }

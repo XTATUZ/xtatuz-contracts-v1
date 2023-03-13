@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity  0.8.17;
 
 import "./IProperty.sol";
 
@@ -8,7 +8,8 @@ interface IXtatuzProject {
         AVAILABLE,
         FINISH,
         REFUND,
-        UNAVAILABLE
+        UNAVAILABLE,
+        PREPARE_FINISH
     }
 
     struct ProjectData {
@@ -74,5 +75,7 @@ interface IXtatuzProject {
     function ownerClaimLeft(uint256[] memory leftNFTList) external;
 
     function extendEndPresale() external;
+
+    function getUnavailableNFT() external view returns (uint256[] memory);
 
 }

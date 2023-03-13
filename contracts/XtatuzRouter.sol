@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.17;
 
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -12,16 +13,19 @@ import "../interfaces/IXtatuzReroll.sol";
 import "../interfaces/IXtatuzReferral.sol";
 
 contract XtatuzRouter {
+    using SafeERC20 for IERC20;
     using Counters for Counters.Counter;
     Counters.Counter private _projectIdCounter;
 
     IXtatuzFactory private _xtatuzFactory;
 
-    address private _spvAddress;
-    address private _xtatuzFactoryAddress;
-    address private _membershipAddress;
-    address private _rerollAddress;
-    address private _referralAddress;
+    address public _spvAddress;
+    address public _xtatuzFactoryAddress;
+    address public _membershipAddress;
+    address public _rerollAddress;
+    address public _referralAddress;
+    uint256 public constant PULLBACK_PERIOD = 30 days;
+    mapping(uint256 => mapping(address => uint256)) public isNoticeTimestamp;
 
     enum CollectionType {
         PRESALE,
@@ -35,15 +39,13 @@ contract XtatuzRouter {
         CollectionType collectionType;
     }
 
-    mapping(address => uint256[]) private _memberdProject;
+    mapping(address => uint256[]) private _memberedProject;
     mapping(address => mapping(uint256 => bool)) private _isMemberClaimed;
     mapping(uint256 => uint256) private _totalRerollFee;
-    mapping(uint256 => mapping(address => bool)) private _isNotice;
+    mapping(uint256 => mapping(address => bool)) public _isNotice;
 
-    constructor(
-        address spv_,
-        address factoryAddress_
-    ) {
+    constructor(address spv_, address factoryAddress_) {
+        require(spv_ != address(0) && factoryAddress_ != address(0), "ROUTER: INVALID ADDRESS");
         _transferSpv(spv_);
         _xtatuzFactory = IXtatuzFactory(factoryAddress_);
         _projectIdCounter.increment();
@@ -51,15 +53,27 @@ contract XtatuzRouter {
 
     event SpvTransferred(address indexed prevSpv, address indexed newSpv);
     event CreatedProject(uint256 indexed projectId, address indexed projectAddress);
-    event AddProjectMember(uint256 indexed projectId, address indexed member, string indexed referral, uint256 totalPrice);
+    event AddProjectMember(
+        uint256 indexed projectId,
+        address indexed member,
+        string indexed referral,
+        uint256 totalPrice
+    );
     event Claimed(uint256 indexed projectId, address member);
     event Refunded(uint256 indexed projectId, address member);
-    event Buyback(uint256 indexed projectId, address member);
-    event ChangePropertyStatus(uint256 indexed projectId, IProperty.PropertyStatus status);
+    event ChangePropertyStatus(
+        uint256 indexed projectId,
+        IProperty.PropertyStatus prevStatus,
+        IProperty.PropertyStatus newStatus
+    );
     event NFTReroll(address indexed member, uint256 projectId, uint256 tokenId);
     event ClaimedRerollFee(address indexed spv, uint256 projectId, uint256 amount);
-    event NoticeToInactiveWallet(uint256 indexed projectId, address inactiveWallet_);
     event PullbackInactive(uint256 indexed projectId, address inactiveWallet_);
+    event NoticeReply(uint256 indexed projectId, address indexed inactiveWallet_, uint256 noticeTimestamp);
+    event NoticeToInactiveWallet(uint256 indexed projectId, address indexed inactiveWallet_, uint256 noticeTimestamp);
+    event SetRerollAddress(address prevAddress, address newAddress);
+    event SetMembershipAddress(address prevAddress, address newAddress);
+    event SetReferralAddress(address prevAddress, address newAddress);
 
     modifier onlySpv() {
         require(_spvAddress == msg.sender, "ROUTER: ONLY_SPV");
@@ -98,10 +112,11 @@ contract XtatuzRouter {
             membershipAddress_: _membershipAddress,
             name_: name_,
             symbol_: symbol_,
-            routerAddress: address(this)
+            routerAddress: address(this),
+            startPresale_: startPresale_,
+            endPresale_: endPresale_
         });
         address projectAddress = _xtatuzFactory.createProjectContract(data);
-        IXtatuzProject(projectAddress).setPresalePeriod(startPresale_, endPresale_);
         emit CreatedProject(projectId, projectAddress);
     }
 
@@ -120,9 +135,8 @@ contract XtatuzRouter {
         referralContract.increaseBuyerRef(projectId_, referral_, amount * minPrice);
 
         address tokenAddress = project.tokenAddress();
-        IERC20(tokenAddress).transferFrom(msg.sender, projectAddress, price);
 
-        uint256[] memory memberedProject = _memberdProject[msg.sender];
+        uint256[] memory memberedProject = _memberedProject[msg.sender];
         bool foundedIndex;
         for (uint256 index = 0; index < memberedProject.length; index++) {
             if (memberedProject[index] == projectId_) {
@@ -130,34 +144,47 @@ contract XtatuzRouter {
             }
         }
         if (!foundedIndex) {
-            _memberdProject[msg.sender].push(projectId_);
+            _memberedProject[msg.sender].push(projectId_);
         }
 
         _isMemberClaimed[msg.sender][projectId_] = false;
+        IERC20(tokenAddress).safeTransferFrom(msg.sender, projectAddress, price);
         emit AddProjectMember(projectId_, msg.sender, referral_, price);
     }
 
     function claim(uint256 projectId_) public {
         require(_isMemberClaimed[msg.sender][projectId_] == false, "ROUTER: ALREADY_CLAIMED");
 
+        _isMemberClaimed[msg.sender][projectId_] = true;
+
         address projectAddress = _xtatuzFactory.getProjectAddress(projectId_);
         IXtatuzProject(projectAddress).claim(msg.sender);
-
-        _isMemberClaimed[msg.sender][projectId_] = true;
 
         emit Claimed(projectId_, msg.sender);
     }
 
     function refund(uint256 projectId_) public {
-        uint256[] memory memberedProject = _memberdProject[msg.sender];
-        address projectAddress = _xtatuzFactory.getProjectAddress(projectId_);
+        uint256[] memory memberedProject = _memberedProject[msg.sender];
+        bool isMember;
 
         for (uint256 index = 0; index < memberedProject.length; index++) {
             if (memberedProject[index] == projectId_) {
-                delete _memberdProject[msg.sender][index];
+                delete _memberedProject[msg.sender][index];
+
+                for (uint256 i = uint256(index); i < _memberedProject[msg.sender].length - 1; i++) {
+                    _memberedProject[msg.sender][i] = _memberedProject[msg.sender][i + 1];
+                }
+                _memberedProject[msg.sender].pop();
+                isMember = true;
+                break;
+            } else {
+                isMember = false;
             }
         }
 
+        require(isMember, "ROUTER: NOT_MEMBERED_PROJECT");
+
+        address projectAddress = _xtatuzFactory.getProjectAddress(projectId_);
         IXtatuzProject(projectAddress).refund(msg.sender);
 
         emit Refunded(projectId_, msg.sender);
@@ -173,7 +200,8 @@ contract XtatuzRouter {
         address tokenAddress = rerollContract.tokenAddress();
         string memory prevUri = property.tokenURI(tokenId_);
         uint256 fee = rerollContract.rerollFee();
-        string[] memory rerollData = rerollContract.getRerollData(projectId_);        
+        string[] memory rerollData = rerollContract.getRerollData(projectId_);
+        require(rerollData.length > 0, "ROUTER: NO_REROLL_DATA");
         address tokenOwner = property.ownerOf(tokenId_);
         require(tokenOwner == msg.sender, "ROUTER: NOT_NFT_OWNER");
 
@@ -182,8 +210,8 @@ contract XtatuzRouter {
         rerollData[newIndex] = prevUri;
         rerollContract.setRerollData(projectId_, rerollData);
 
-        IERC20(tokenAddress).transferFrom(msg.sender, address(this), fee);
         _totalRerollFee[projectId_] += fee;
+        IERC20(tokenAddress).safeTransferFrom(msg.sender, address(this), fee);
 
         emit NFTReroll(msg.sender, projectId_, tokenId_);
     }
@@ -195,11 +223,11 @@ contract XtatuzRouter {
         address tokenAddress = rerollContract.tokenAddress();
 
         uint256 totalFee = _totalRerollFee[projectId_];
-        IERC20(tokenAddress).transfer(msg.sender, totalFee);
         _totalRerollFee[projectId_] = 0;
+        IERC20(tokenAddress).safeTransfer(msg.sender, totalFee);
         emit ClaimedRerollFee(msg.sender, projectId_, totalFee);
     }
-    
+
     function isMemberClaimed(address member_, uint256 projectId_) public view returns (bool) {
         return _isMemberClaimed[member_][projectId_];
     }
@@ -212,56 +240,29 @@ contract XtatuzRouter {
         return _xtatuzFactory.getProjectAddress(projectId);
     }
 
-    function getAllCollection() public view returns (Collection[] memory) {
-        uint256[] memory projectList = _memberdProject[msg.sender];
-        Collection[] memory collections = new Collection[](projectList.length);
-        for (uint256 index = 0; index < projectList.length; index++) {
-            if (projectList[index] > 0) {
-                uint256 projectId = projectList[index];
-                address projectAddress = _xtatuzFactory.getProjectAddress(projectId);
-                IXtatuzProject.Status status = IXtatuzProject(projectAddress).projectStatus();
-                if (status == IXtatuzProject.Status.FINISH && _isMemberClaimed[msg.sender][projectId]) {
-                    address propertyAddress = _xtatuzFactory.getPropertyAddress(projectId);
-                    uint256[] memory tokenList = IProperty(propertyAddress).getTokenIdList(msg.sender);
-                    IProperty.PropertyStatus propStatus = IProperty(propertyAddress).propertyStatus();
-                    CollectionType collecType = CollectionType(uint256(propStatus) + 1);
-                    Collection memory collect = Collection({
-                        contractAddress: propertyAddress,
-                        tokenIdList: tokenList,
-                        collectionType: collecType
-                    });
-                    collections[index] = collect;
-                } else {
-                    address presaledAddress = _xtatuzFactory.getPresaledAddress(projectId);
-                    uint256[] memory tokenList = IPresaled(presaledAddress).getPresaledOwner(msg.sender);
-                    Collection memory collect = Collection({
-                        contractAddress: presaledAddress,
-                        tokenIdList: tokenList,
-                        collectionType: CollectionType.PRESALE
-                    });
-                    collections[index] = collect;
-                }
-            }
-        }
-        return collections;
-    }
-
     function setRerollAddress(address rerollAddress_) public prohibitZeroAddress(rerollAddress_) onlySpv {
+        address prevAddress = _rerollAddress;
         _rerollAddress = rerollAddress_;
+        emit SetRerollAddress(prevAddress, rerollAddress_);
     }
 
     function setMembershipAddress(address membershipAddress_) public prohibitZeroAddress(membershipAddress_) onlySpv {
+        address prevAddress = _membershipAddress;
         _membershipAddress = membershipAddress_;
+        emit SetMembershipAddress(prevAddress, membershipAddress_);
     }
 
     function setReferralAddress(address referralAddress_) public prohibitZeroAddress(referralAddress_) onlySpv {
+        address prevAddress = _referralAddress;
         _referralAddress = referralAddress_;
+        emit SetReferralAddress(prevAddress, referralAddress_);
     }
 
-    function setPropertyStatus(uint256 projectId_, IProperty.PropertyStatus status) public onlySpv {
+    function setPropertyStatus(uint256 projectId_, IProperty.PropertyStatus newStatus) public onlySpv {
         address propertyAddress = _xtatuzFactory.getPropertyAddress(projectId_);
-        IProperty(propertyAddress).setPropertyStatus(status);
-        emit ChangePropertyStatus(projectId_, status);
+        IProperty.PropertyStatus prevStatus = IProperty(propertyAddress).propertyStatus();
+        IProperty(propertyAddress).setPropertyStatus(newStatus);
+        emit ChangePropertyStatus(projectId_, prevStatus, newStatus);
     }
 
     function _transferSpv(address newSpv_) internal prohibitZeroAddress(newSpv_) {
@@ -278,24 +279,27 @@ contract XtatuzRouter {
         address projectAddress = _xtatuzFactory.getProjectAddress(projectId_);
         require(projectAddress != address(0), "ROUTER: INVALID_PROJECT_ID");
         _isNotice[projectId_][msg.sender] = false;
+        isNoticeTimestamp[projectId_][msg.sender] = block.timestamp;
+        emit NoticeReply(projectId_, msg.sender, block.timestamp);
     }
 
     function noticeToInactiveWallet(uint256 projectId_, address inactiveWallet_) public onlySpv {
         _isNotice[projectId_][inactiveWallet_] = true;
-        emit NoticeToInactiveWallet(projectId_, inactiveWallet_);
+        isNoticeTimestamp[projectId_][inactiveWallet_] = block.timestamp + PULLBACK_PERIOD;
+        emit NoticeToInactiveWallet(projectId_, inactiveWallet_, block.timestamp);
     }
 
     function pullbackInactive(uint256 projectId_, address inactiveWallet_) public onlySpv {
         require(_isNotice[projectId_][inactiveWallet_] == true, "ROUTER: NOTICE_BEFORE");
+        require(isNoticeTimestamp[projectId_][inactiveWallet_] < block.timestamp, "ROUTER: IN_NOTICE_PERIOD");
         address propertyAddress = _xtatuzFactory.getPropertyAddress(projectId_);
         IProperty property = IProperty(propertyAddress);
         uint256[] memory nftList = property.getTokenIdList(inactiveWallet_);
 
-        for(uint i = 0; i < nftList.length; i++){
+        for (uint256 i = 0; i < nftList.length; i++) {
             IERC721(propertyAddress).safeTransferFrom(inactiveWallet_, msg.sender, nftList[i]);
         }
 
         emit PullbackInactive(projectId_, inactiveWallet_);
     }
-
 }

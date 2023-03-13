@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity  0.8.17;
 
-import "./XtatuzProject.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../interfaces/IPropertyFactory.sol";
 import "../interfaces/IPresaledFactory.sol";
@@ -19,9 +18,13 @@ contract XtatuzFactory is Ownable {
     mapping(uint256 => address) public getPresaledAddress;
     mapping(uint256 => address) public getPropertyAddress;
 
-    address private _propertyFactory;
-    address private _presaledFactory;
-    address private _projectFactory;
+    address public _propertyFactory;
+    address public _presaledFactory;
+    address public _projectFactory;
+
+    event CreatePresale(uint256 projectId, address presaleAddress);
+    event CreateProperty(uint256 projectId, address presaleAddress);
+    event CreateProjectContract(uint256 projectId, address projectAddress);
 
     constructor(
         address propertyFactory_,
@@ -46,7 +49,6 @@ contract XtatuzFactory is Ownable {
 
     function createProjectContract(IXtatuzFactory.ProjectPrepareData memory projectData)
         public
-        payable
         onlyOwner
         returns (address)
     {
@@ -65,6 +67,8 @@ contract XtatuzFactory is Ownable {
             owner(),
             projectData.count_
         );
+        emit CreateProperty(projectData.projectId_, propertyAddress);
+
         address presaledAddress = presaledFactory.createPresale(
             projectData.name_,
             projectData.symbol_,
@@ -73,6 +77,7 @@ contract XtatuzFactory is Ownable {
             tx.origin, // operator
             owner()
         );
+        emit CreatePresale(projectData.projectId_, presaledAddress);
 
         IProjectFactory.CreateProject memory projectFactoryData = IProjectFactory.CreateProject({
             projectId_: projectData.projectId_,
@@ -82,7 +87,9 @@ contract XtatuzFactory is Ownable {
             underwriteCount_ : projectData.underwriteCount_,
             tokenAddress_: projectData.tokenAddress_,
             propertyAddress_: propertyAddress,
-            presaledAddress_: presaledAddress
+            presaledAddress_: presaledAddress,
+            startPresale_: projectData.startPresale_,
+            endPresale_ : projectData.endPresale_
         });
         
         address projectAddress = projectFactory.createProject(projectFactoryData);
@@ -98,6 +105,7 @@ contract XtatuzFactory is Ownable {
         getPropertyAddress[projectData.projectId_] = propertyAddress;
         getPresaledAddress[projectData.projectId_] = presaledAddress;
 
+        emit CreateProjectContract(projectData.projectId_, propertyAddress);
         return projectAddress;
     }
 }

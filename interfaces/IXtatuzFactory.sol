@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity  0.8.17;
 
 import "./IProperty.sol";
 
@@ -15,9 +15,11 @@ interface IXtatuzFactory {
         string name_;
         string symbol_;
         address routerAddress;
+        uint256 startPresale_;
+        uint256 endPresale_;
     }
 
-    function createProjectContract(ProjectPrepareData memory projectData) external payable returns (address);
+    function createProjectContract(ProjectPrepareData memory projectData) external returns (address);
 
     function getProjectAddress(uint256 projectId_) external view returns (address);
 
