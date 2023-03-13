@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity  0.8.17;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -61,7 +61,11 @@ contract XtatuzRouter {
     );
     event Claimed(uint256 indexed projectId, address member);
     event Refunded(uint256 indexed projectId, address member);
-    event ChangePropertyStatus(uint256 indexed projectId, IProperty.PropertyStatus prevStatus, IProperty.PropertyStatus newStatus);
+    event ChangePropertyStatus(
+        uint256 indexed projectId,
+        IProperty.PropertyStatus prevStatus,
+        IProperty.PropertyStatus newStatus
+    );
     event NFTReroll(address indexed member, uint256 projectId, uint256 tokenId);
     event ClaimedRerollFee(address indexed spv, uint256 projectId, uint256 amount);
     event PullbackInactive(uint256 indexed projectId, address inactiveWallet_);
@@ -161,14 +165,26 @@ contract XtatuzRouter {
 
     function refund(uint256 projectId_) public {
         uint256[] memory memberedProject = _memberedProject[msg.sender];
-        address projectAddress = _xtatuzFactory.getProjectAddress(projectId_);
+        bool isMember;
 
         for (uint256 index = 0; index < memberedProject.length; index++) {
             if (memberedProject[index] == projectId_) {
                 delete _memberedProject[msg.sender][index];
+
+                for (uint256 i = uint256(index); i < _memberedProject[msg.sender].length - 1; i++) {
+                    _memberedProject[msg.sender][i] = _memberedProject[msg.sender][i + 1];
+                }
+                _memberedProject[msg.sender].pop();
+                isMember = true;
+                break;
+            } else {
+                isMember = false;
             }
         }
 
+        require(isMember, "ROUTER: NOT_MEMBERED_PROJECT");
+
+        address projectAddress = _xtatuzFactory.getProjectAddress(projectId_);
         IXtatuzProject(projectAddress).refund(msg.sender);
 
         emit Refunded(projectId_, msg.sender);
@@ -193,7 +209,7 @@ contract XtatuzRouter {
         property.setTokenURI(tokenId_, rerollData[newIndex]);
         rerollData[newIndex] = prevUri;
         rerollContract.setRerollData(projectId_, rerollData);
-        
+
         _totalRerollFee[projectId_] += fee;
         IERC20(tokenAddress).safeTransferFrom(msg.sender, address(this), fee);
 
