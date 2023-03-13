@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.17;
 
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
 import "../interfaces/IProperty.sol";
 import "../interfaces/IPresaled.sol";
 import "../interfaces/IXtatuzRouter.sol";
 import "../interfaces/IXtatuzProject.sol";
 
-contract XtatuzProject is Ownable, Pausable {
+contract XtatuzProject is Ownable {
+    using SafeERC20 for IERC20;
+
     address private _operatorAddress;
     address private _trusteeAddress;
     address private _projectOwner;
@@ -34,6 +36,7 @@ contract XtatuzProject is Ownable, Pausable {
     bool private _isTriggedEndpresale;
 
     address[] public projectMember;
+    mapping(address => bool) public memberExists;
     mapping(address => uint256[]) public getMemberedNFTList;
 
     mapping(address => bool) private _multiSigMint;
@@ -47,11 +50,14 @@ contract XtatuzProject is Ownable, Pausable {
         uint256 underwriteCount_,
         address tokenAddress_,
         address propertyAddress_,
-        address presaledAddress_
+        address presaledAddress_,
+        uint256 startPresale_,
+        uint256 endPresale_
     ) {
         _transferOperator(operator_);
         _transferTrustee(trustee_);
         _initialData(count_, underwriteCount_, tokenAddress_, propertyAddress_, presaledAddress_);
+        setPresalePeriod(startPresale_, endPresale_);
         projectId = projectId_;
         _projectOwner = tx.origin;
     }
@@ -82,11 +88,6 @@ contract XtatuzProject is Ownable, Pausable {
         _;
     }
 
-    modifier endedPresale() {
-        _checkEndedPresale();
-        _;
-    }
-
     modifier ProhibitZeroAddress(address caller) {
         _checkProhibitZeroAddress(caller);
         _;
@@ -97,12 +98,12 @@ contract XtatuzProject is Ownable, Pausable {
         _;
     }
 
-    modifier onlyProjectOwner {
+    modifier onlyProjectOwner() {
         checkOnlyProjectOwner();
         _;
     }
 
-    function setPresalePeriod(uint256 startPresale_, uint256 endPresale_) public onlyOperator {
+    function setPresalePeriod(uint256 startPresale_, uint256 endPresale_) internal onlyOwner {
         require(endPresale_ > startPresale_, "PROJECT: WRONG_END_DATE");
         startPresale = startPresale_;
         endPresale = endPresale_;
@@ -121,13 +122,13 @@ contract XtatuzProject is Ownable, Pausable {
         public
         isAvailable
         isLeftReserve
-        whenNotPaused
         onlyOwner
         returns (uint256)
     {
+        require(projectStatus() == IXtatuzProject.Status.AVAILABLE, "PROJECT: PROJECT_UNAVIALABLE");
         uint256 amount = nftList_.length;
         require(amount > 0, "PROJECT: ZERO_AMOUNT");
-        for(uint i = 0; i < amount; ++i){
+        for (uint256 i = 0; i < amount; ++i) {
             require(nftList_[i] <= count, "PROJECT: ID_OVER_FRAGMENT");
         }
         _checkAvailableNFT(nftList_);
@@ -139,6 +140,11 @@ contract XtatuzProject is Ownable, Pausable {
 
         countReserve -= amount;
 
+        if (memberExists[member_] == false) {
+            memberExists[member_] = true;
+            projectMember.push(member_);
+        }
+
         projectMember.push(member_);
 
         IPresaled(_presaledAddress).mint(member_, nftList_);
@@ -147,7 +153,7 @@ contract XtatuzProject is Ownable, Pausable {
         return price;
     }
 
-    function claim(address member_) public onlyOperator whenNotPaused {
+    function claim(address member_) public onlyOwner {
         uint256[] memory tokenList = IPresaled(_presaledAddress).getPresaledOwner(member_);
         require(tokenList.length > 0, "PROJECT: TOKENLIST_ZERO");
         require(projectStatus() == IXtatuzProject.Status.FINISH, "PROJECT: PROJECT_UNFINISH");
@@ -162,27 +168,34 @@ contract XtatuzProject is Ownable, Pausable {
         property.mintFragment(member_, tokenList);
     }
 
-    function refund(address member_) public onlyOperator whenNotPaused{
+    function refund(address member_) public onlyOwner {
         uint256[] memory tokenList = IPresaled(_presaledAddress).getPresaledOwner(member_);
         require(projectStatus() == IXtatuzProject.Status.REFUND, "PROJECT: PROJECT_UNREFUNDED");
 
         IPresaled(_presaledAddress).burn(tokenList);
- 
+
         uint256 totalToken = getMemberedNFTList[member_].length * minPrice;
-        IERC20(tokenAddress).transfer(member_, totalToken);
+        IERC20(tokenAddress).safeTransfer(member_, totalToken);
     }
 
-    function finishProject(address xtatuzWallet_) public isFullReserve whenNotPaused onlyOperator {
-        address referralAddress = IXtatuzRouter(owner()).referralAddress();
+    function finishProject(address xtatuzWallet_) public isFullReserve onlyOperator {
+        require(projectStatus() == IXtatuzProject.Status.PREPARE_FINISH, "PROJECT: NOT_READY_TO_FINISH");
+        _multiSigMint[msg.sender] = true;
+        require(
+            _multiSigMint[_operatorAddress] && _multiSigMint[_trusteeAddress],
+            "PROJECT: NOT_ALLOWS_BY_MULTISIGMINT"
+        );
 
         isFinished = true;
-        multiSigMint();
+        checkCanClaim = true;
+        IProperty(_propertyAddress).mintMaster();
 
+        address referralAddress = IXtatuzRouter(owner()).referralAddress();
         uint256 referralAmount = (((count - countReserve) * minPrice) * 5) / 100;
         uint256 xtatuzAmount = ((count * minPrice) * 10) / 100;
-        IERC20(tokenAddress).transfer(_projectOwner, projectValue - xtatuzAmount);
-        IERC20(tokenAddress).transfer(referralAddress, referralAmount);
-        IERC20(tokenAddress).transfer(xtatuzWallet_, xtatuzAmount - referralAmount);
+        IERC20(tokenAddress).safeTransfer(_projectOwner, projectValue - xtatuzAmount);
+        IERC20(tokenAddress).safeTransfer(referralAddress, referralAmount);
+        IERC20(tokenAddress).safeTransfer(xtatuzWallet_, xtatuzAmount - referralAmount);
 
         emit FinishProject(projectId, xtatuzWallet_);
     }
@@ -196,11 +209,6 @@ contract XtatuzProject is Ownable, Pausable {
 
     function multiSigMint() public isFullReserve spvAndTrustee {
         _multiSigMint[msg.sender] = true;
-
-        if (_multiSigMint[_operatorAddress] && _multiSigMint[_trusteeAddress]) {
-            IProperty(_propertyAddress).mintMaster();
-            checkCanClaim = true;
-        }
     }
 
     function multiSigBurn() public isFullReserve spvAndTrustee {
@@ -224,12 +232,14 @@ contract XtatuzProject is Ownable, Pausable {
     }
 
     function projectStatus() public view returns (IXtatuzProject.Status status) {
-        if (!isFinished && block.timestamp >= startPresale && block.timestamp <= endPresale && countReserve > 0) {
-            return IXtatuzProject.Status.AVAILABLE;
-        } else if (countReserve == 0 || isFinished) {
+        if (isFinished) {
             return IXtatuzProject.Status.FINISH;
-        } else if (block.timestamp > endPresale && countReserve > 0) {
+        } else if (countReserve == 0 || _underwriteCount >= countReserve) {
+            return IXtatuzProject.Status.PREPARE_FINISH;
+        } else if (block.timestamp > endPresale && countReserve > 0 && !(_underwriteCount >= countReserve)) {
             return IXtatuzProject.Status.REFUND;
+        } else if (!isFinished && block.timestamp >= startPresale && block.timestamp <= endPresale) {
+            return IXtatuzProject.Status.AVAILABLE;
         } else {
             return IXtatuzProject.Status.UNAVAILABLE;
         }
@@ -258,47 +268,46 @@ contract XtatuzProject is Ownable, Pausable {
         return projectData;
     }
 
-    function transferProjectOwner(address newProjectOwner_) public whenNotPaused onlyProjectOwner {
+    function transferProjectOwner(address newProjectOwner_) public onlyProjectOwner {
         _transferProjectOwner(newProjectOwner_);
     }
 
-    function transferOperator(address newOperator_) public whenNotPaused onlyOperator {
+    function transferOperator(address newOperator_) public onlyOperator {
         _transferOperator(newOperator_);
     }
 
-    function transferTrustee(address newTrustee_) public whenNotPaused onlyOperator {
+    function transferTrustee(address newTrustee_) public onlyOperator {
         _transferTrustee(newTrustee_);
     }
 
     function _extendEndPresale() internal {
+        require(
+            block.timestamp > (endPresale - 1 days) && block.timestamp < endPresale,
+            "PROJECT: ONLY_THE_EXTENDING_PERIOD"
+        );
         require(_isTriggedEndpresale == false, "PROJECT: EXTENED_PRESALE");
-        if (block.timestamp > (endPresale - 1 days)) {
-            uint256 absoluteCount = count - _underwriteCount;
-            uint256 percent = ((count - countReserve) * 100) / absoluteCount;
-            if (percent >= 95) {
-                endPresale += 5 days;
-            } else if (percent >= 85 && percent < 95) {
-                endPresale += 10 days;
-            } else if (percent >= 65 && percent < 85) {
-                endPresale += 15 days;
-            } else {
-                endPresale += 30 days;
-            }
-            _isTriggedEndpresale = true;
+
+        uint256 absoluteCount = count - _underwriteCount;
+        uint256 percent = ((count - countReserve) * 100) / absoluteCount;
+        if (percent >= 95) {
+            endPresale += 5 days;
+        } else if (percent >= 85 && percent < 95) {
+            endPresale += 10 days;
+        } else if (percent >= 65 && percent < 85) {
+            endPresale += 15 days;
+        } else {
+            endPresale += 30 days;
         }
-    }
-
-    function pause() public onlyOperator {
-        _pause();
-    }
-
-    function unpause() public onlyOperator {
-        _unpause();
+        _isTriggedEndpresale = true;
     }
 
     function _transferOperator(address newOperator_) internal ProhibitZeroAddress(newOperator_) {
         address prevOperator = _operatorAddress;
         _operatorAddress = newOperator_;
+        if (_presaledAddress != address(0) && _propertyAddress != address(0)) {
+            IPresaled(_presaledAddress).setOperator(newOperator_);
+            IProperty(_propertyAddress).setOperator(newOperator_);
+        }
         emit OperatorTransfered(prevOperator, newOperator_);
     }
 
@@ -340,10 +349,7 @@ contract XtatuzProject is Ownable, Pausable {
     }
 
     function _checkSpvAndTrustee() internal view {
-        require(
-            msg.sender == _operatorAddress || msg.sender == _trusteeAddress,
-            "PROJECT: ONLY_SPV_AND_TRUSTEE"
-        );
+        require(msg.sender == _operatorAddress || msg.sender == _trusteeAddress, "PROJECT: ONLY_SPV_AND_TRUSTEE");
     }
 
     function _checkIsFullReserve() internal view {
@@ -356,11 +362,7 @@ contract XtatuzProject is Ownable, Pausable {
 
     function _checkIsAvailable() internal view {
         uint256 timestamp = block.timestamp;
-        require(timestamp >= startPresale && timestamp <= endPresale, "PROJECT: ENDED_PRESALE");
-    }
-
-    function _checkEndedPresale() internal view {
-        require(block.timestamp > endPresale, "PROJECT: PROJECT_NOT_END");
+        require(timestamp >= startPresale && timestamp <= endPresale, "PROJECT: UNAVAILABLE");
     }
 
     function _checkProhibitZeroAddress(address caller) internal pure {
