@@ -105,7 +105,7 @@ contract XtatuzFactory is Ownable {
         getPropertyAddress[projectData.projectId_] = propertyAddress;
         getPresaledAddress[projectData.projectId_] = presaledAddress;
 
-        emit CreateProjectContract(projectData.projectId_, propertyAddress);
+        emit CreateProjectContract(projectData.projectId_, projectAddress);
         return projectAddress;
     }
 }
