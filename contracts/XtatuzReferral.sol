@@ -22,7 +22,7 @@ contract XtatuzReferral is Ownable {
 
     address public _operatorAddress;
     address public tokenAddress;
-
+    uint256 public constant MAX_PERCENTAGE = 5;
     uint256 public maxPercentage = 5;
     uint256 public defaultPercentage = 3;
 
@@ -130,7 +130,7 @@ contract XtatuzReferral is Ownable {
     }
 
     function setMaxPercentage(uint256 max_) public onlyOperator {
-        require(max_ > 0, "REFERRAL: INVALID_PERCENT");
+        require(max_ > 0 && max_ <= MAX_PERCENTAGE, "REFERRAL: INVALID_PERCENT");
         uint256 prev = maxPercentage;
         maxPercentage = max_;
         emit ChangeMaxPercent(prev, max_);
