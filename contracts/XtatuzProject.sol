@@ -145,8 +145,6 @@ contract XtatuzProject is Ownable {
             projectMember.push(member_);
         }
 
-        projectMember.push(member_);
-
         IPresaled(_presaledAddress).mint(member_, nftList_);
         emit AddProjectMember(projectId, member_, price);
 
