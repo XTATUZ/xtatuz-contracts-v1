@@ -71,7 +71,7 @@ contract XtatuzProject is Ownable {
     event SetUnderwriteCount(uint256 prevValue, uint256 newValue);
     event Claim(address member, uint256[] tokenList);
     event Refund(address member, uint256[] tokenList);
-    event ExtendEndPresale(uint256 prevEndPresale, uint256 newEndPresale);
+    event ExtendEndPresale(uint256 prevEndPresale, uint256 newEndPresale, uint256 presaledPercent);
     event OwnerClaimLeft(address owner, uint256[] tokenList);
     event MultiSigMint(address signer);
     event MultiSigBurn(address signer);
@@ -243,11 +243,9 @@ contract XtatuzProject is Ownable {
     function extendEndPresale() public onlyOperator {
         require(block.timestamp > (endPresale - 1 days), "PROJECT: NOT_END_PREV");
         require(_isTriggedEndpresale == false, "PROJECT: EXTENDED_PRESALE");
-        uint256 prevEndPresale = endPresale;
         if (_isTriggedEndpresale == false) {
             _extendEndPresale();
         }
-        emit ExtendEndPresale(prevEndPresale, endPresale);
     }
 
     function projectStatus() public view returns (IXtatuzProject.Status status) {
@@ -305,7 +303,7 @@ contract XtatuzProject is Ownable {
             "PROJECT: ONLY_THE_EXTENDING_PERIOD"
         );
         require(_isTriggedEndpresale == false, "PROJECT: EXTENED_PRESALE");
-
+        uint256 prevEndPresale = endPresale;
         uint256 absoluteCount = count - _underwriteCount;
         uint256 percent = ((count - countReserve) * 100) / absoluteCount;
         if (percent >= 95) {
@@ -318,6 +316,8 @@ contract XtatuzProject is Ownable {
             endPresale += 30 days;
         }
         _isTriggedEndpresale = true;
+
+        emit ExtendEndPresale(prevEndPresale, endPresale, percent);
     }
 
     function _transferOperator(address newOperator_) internal ProhibitZeroAddress(newOperator_) {
