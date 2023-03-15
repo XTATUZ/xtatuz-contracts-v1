@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "../interfaces/IXtatuzFactory.sol";
 import "../interfaces/IXtatuzProject.sol";
-import "../interfaces/IPresaled.sol";
 import "../interfaces/IProperty.sol";
 import "../interfaces/IXtatuzReroll.sol";
 import "../interfaces/IXtatuzReferral.sol";
@@ -20,7 +19,6 @@ contract XtatuzRouter {
     IXtatuzFactory private _xtatuzFactory;
 
     address public _spvAddress;
-    address public _xtatuzFactoryAddress;
     address public _membershipAddress;
     address public _rerollAddress;
     address public _referralAddress;

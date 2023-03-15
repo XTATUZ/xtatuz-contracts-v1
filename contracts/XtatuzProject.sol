@@ -67,6 +67,8 @@ contract XtatuzProject is Ownable {
     event ProjectOwnerTransferred(address indexed prevOwner, address indexed newOwner);
     event AddProjectMember(uint256 indexed projectId, address indexed member, uint256 value);
     event FinishProject(uint256 indexed projectId, address xtatuzWallet);
+    event SetUnderwriteCount(uint256 prevValue, uint256 newValue);
+    event ExtendEndPresale(uint256 prevEndPresale, uint256 newEndPresale);
 
     modifier spvAndTrustee() {
         _checkSpvAndTrustee();
@@ -111,7 +113,9 @@ contract XtatuzProject is Ownable {
 
     function setUnderwriteCount(uint256 underwriteCount_) public onlyOperator {
         require(underwriteCount_ < count, "PROJECT: INVALID_COUNT");
+        uint256 prevValue = underwriteCount_;
         _underwriteCount = underwriteCount_;
+        emit SetUnderwriteCount(prevValue, underwriteCount_);
     }
 
     function getMemberedNFTLists(address member_) public view returns (uint256[] memory) {
@@ -224,9 +228,11 @@ contract XtatuzProject is Ownable {
     function extendEndPresale() public onlyOperator {
         require(block.timestamp > (endPresale - 1 days), "PROJECT: NOT_END_PREV");
         require(_isTriggedEndpresale == false, "PROJECT: EXTENDED_PRESALE");
+        uint256 prevEndPresale = endPresale;
         if (_isTriggedEndpresale == false) {
             _extendEndPresale();
         }
+        emit ExtendEndPresale(prevEndPresale, endPresale);
     }
 
     function projectStatus() public view returns (IXtatuzProject.Status status) {
