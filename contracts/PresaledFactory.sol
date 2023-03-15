@@ -4,7 +4,9 @@ pragma solidity 0.8.17;
 import "./Presaled.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract PresaledFactory is Ownable{
+contract PresaledFactory is Ownable {
+    event CreatePresale(string name, address presaleAddress);
+
     function createPresale(
         string memory _name,
         string memory _symbol,
@@ -15,6 +17,7 @@ contract PresaledFactory is Ownable{
     ) public onlyOwner returns (address) {
         address presaledAddress = address(new Presaled{salt: _salt}(_name, _symbol, count_, operator_, routerAddress_));
         Presaled(presaledAddress).transferOwnership(msg.sender);
+        emit CreatePresale(_name, presaledAddress);
         return presaledAddress;
     }
 }

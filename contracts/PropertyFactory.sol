@@ -5,6 +5,8 @@ import "./Property.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract PropertyFactory is Ownable {
+    event CreateProperty(string name, address propertyAddress);
+
     function createProperty(
         string memory _name,
         string memory _symbol,
@@ -15,6 +17,7 @@ contract PropertyFactory is Ownable {
     ) public onlyOwner returns (address) {
         address propertyAddress = address(new Property{salt: _salt}(_name, _symbol, operator_, routerAddress_, count_));
         Property(propertyAddress).transferOwnership(msg.sender);
+        emit CreateProperty(_name, propertyAddress);
         return propertyAddress;
     }
 }

@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "../interfaces/IXtatuzFactory.sol";
 import "../interfaces/IXtatuzProject.sol";
-import "../interfaces/IPresaled.sol";
 import "../interfaces/IProperty.sol";
 import "../interfaces/IXtatuzReroll.sol";
 import "../interfaces/IXtatuzReferral.sol";
@@ -20,7 +19,6 @@ contract XtatuzRouter {
     IXtatuzFactory private _xtatuzFactory;
 
     address public _spvAddress;
-    address public _xtatuzFactoryAddress;
     address public _membershipAddress;
     address public _rerollAddress;
     address public _referralAddress;
@@ -169,16 +167,10 @@ contract XtatuzRouter {
 
         for (uint256 index = 0; index < memberedProject.length; index++) {
             if (memberedProject[index] == projectId_) {
-                delete _memberedProject[msg.sender][index];
-
-                for (uint256 i = uint256(index); i < _memberedProject[msg.sender].length - 1; i++) {
-                    _memberedProject[msg.sender][i] = _memberedProject[msg.sender][i + 1];
-                }
-                _memberedProject[msg.sender].pop();
                 isMember = true;
+                _memberedProject[msg.sender][index] = _memberedProject[msg.sender][memberedProject.length - 1];
+                _memberedProject[msg.sender].pop();
                 break;
-            } else {
-                isMember = false;
             }
         }
 
