@@ -88,7 +88,7 @@ contract Property is ERC721Enumerable, Ownable {
     }
 
     function setPropertyStatus(IProperty.PropertyStatus status) public onlyOperator {
-        IProperty.PropertyStatus prevStatus = status;
+        IProperty.PropertyStatus prevStatus = propertyStatus;
         propertyStatus = status;
         emit SetPropertyStatus(prevStatus, status);
     }
