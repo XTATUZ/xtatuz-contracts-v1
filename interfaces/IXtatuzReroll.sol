@@ -7,12 +7,6 @@ interface IXtatuzReroll {
 
     function tokenAddress() external returns (address);
 
-    function reroll(
-        uint256 projectId_,
-        uint256 tokenId_,
-        address member_
-    ) external;
-
     function rerollFee() external returns (uint256);
 
     function getRerollData(uint256 projectId) external returns (string[] memory);

@@ -22,7 +22,7 @@ contract XtatuzReferral is Ownable {
 
     address public _operatorAddress;
     address public tokenAddress;
-
+    uint256 public constant MAX_PERCENTAGE = 5;
     uint256 public maxPercentage = 5;
     uint256 public defaultPercentage = 3;
 
@@ -41,7 +41,8 @@ contract XtatuzReferral is Ownable {
     event SetReferralLevels(uint256[] preLevels, uint256[] newLevels);
     event SetLevel(uint256 projectId, string referral, uint256 level);
     event UpdateReferralAmount(uint256 indexed projectId, uint256 amount_);
-    event Claim(uint256 indexed projectId_, string referral_, uint256 amount );
+    event Claim(uint256 indexed projectId_, string referral_, uint256 amount);
+    event WithdrawFundsLeft(string referral_, uint256 projectId_, uint256 amount);
 
     modifier onlyOperator() {
         _checkOnlyOperator();
@@ -130,7 +131,7 @@ contract XtatuzReferral is Ownable {
     }
 
     function setMaxPercentage(uint256 max_) public onlyOperator {
-        require(max_ > 0, "REFERRAL: INVALID_PERCENT");
+        require(max_ > 0 && max_ <= MAX_PERCENTAGE, "REFERRAL: INVALID_PERCENT");
         uint256 prev = maxPercentage;
         maxPercentage = max_;
         emit ChangeMaxPercent(prev, max_);
@@ -173,6 +174,7 @@ contract XtatuzReferral is Ownable {
         require(status == IXtatuzProject.Status.FINISH, "REFERRAL: PROJECT_NOT_FINISH");
         buyerAgentDepositLeft[referral_][projectId_] = 0;
         IERC20(tokenAddress).safeTransfer(msg.sender, amount);
+        emit WithdrawFundsLeft(referral_, projectId_, amount);
     }
 
     function transferOperator(address newOperator_) public onlyOperator {

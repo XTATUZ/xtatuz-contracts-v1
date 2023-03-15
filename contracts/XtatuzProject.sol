@@ -67,6 +67,15 @@ contract XtatuzProject is Ownable {
     event ProjectOwnerTransferred(address indexed prevOwner, address indexed newOwner);
     event AddProjectMember(uint256 indexed projectId, address indexed member, uint256 value);
     event FinishProject(uint256 indexed projectId, address xtatuzWallet);
+    event SetPresalePeriod(uint256 prevStart, uint256 prevEnd, uint256 newStart, uint256 newEnd);
+    event SetUnderwriteCount(uint256 prevValue, uint256 newValue);
+    event Claim(address member, uint256[] tokenList);
+    event Refund(address member, uint256[] tokenList);
+    event ExtendEndPresale(uint256 prevEndPresale, uint256 newEndPresale, uint256 presaledPercent);
+    event OwnerClaimLeft(address owner, uint256[] tokenList);
+    event MultiSigMint(address signer);
+    event MultiSigBurn(address signer);
+    event InitialData(uint256 count, uint256 underwriteCount, address tokenAddress, address propertyAddress, address presaledAddress);
 
     modifier spvAndTrustee() {
         _checkSpvAndTrustee();
@@ -105,13 +114,18 @@ contract XtatuzProject is Ownable {
 
     function setPresalePeriod(uint256 startPresale_, uint256 endPresale_) internal onlyOwner {
         require(endPresale_ > startPresale_, "PROJECT: WRONG_END_DATE");
+        uint256 prevStart = startPresale;
+        uint256 prevEnd = endPresale;
         startPresale = startPresale_;
         endPresale = endPresale_;
+        emit SetPresalePeriod(prevStart, prevEnd, startPresale_, endPresale_);
     }
 
     function setUnderwriteCount(uint256 underwriteCount_) public onlyOperator {
         require(underwriteCount_ < count, "PROJECT: INVALID_COUNT");
+        uint256 prevValue = _underwriteCount;
         _underwriteCount = underwriteCount_;
+        emit SetUnderwriteCount(prevValue, underwriteCount_);
     }
 
     function getMemberedNFTLists(address member_) public view returns (uint256[] memory) {
@@ -145,8 +159,6 @@ contract XtatuzProject is Ownable {
             projectMember.push(member_);
         }
 
-        projectMember.push(member_);
-
         IPresaled(_presaledAddress).mint(member_, nftList_);
         emit AddProjectMember(projectId, member_, price);
 
@@ -166,6 +178,7 @@ contract XtatuzProject is Ownable {
 
         presaled.burn(tokenList);
         property.mintFragment(member_, tokenList);
+        emit Claim(member_, tokenList);
     }
 
     function refund(address member_) public onlyOwner {
@@ -176,6 +189,7 @@ contract XtatuzProject is Ownable {
 
         uint256 totalToken = getMemberedNFTList[member_].length * minPrice;
         IERC20(tokenAddress).safeTransfer(member_, totalToken);
+        emit Refund(member_, tokenList);
     }
 
     function finishProject(address xtatuzWallet_) public isFullReserve onlyOperator {
@@ -205,10 +219,12 @@ contract XtatuzProject is Ownable {
         _checkAvailableNFT(leftNFTList);
         _pickupAvailableNFT(leftNFTList, msg.sender);
         IPresaled(_presaledAddress).mint(msg.sender, leftNFTList);
+        emit OwnerClaimLeft(msg.sender, leftNFTList);
     }
 
     function multiSigMint() public isFullReserve spvAndTrustee {
         _multiSigMint[msg.sender] = true;
+        emit MultiSigMint(msg.sender);
     }
 
     function multiSigBurn() public isFullReserve spvAndTrustee {
@@ -221,6 +237,7 @@ contract XtatuzProject is Ownable {
             IProperty(_propertyAddress).burnMaster();
             checkCanClaim = false;
         }
+        emit MultiSigBurn(msg.sender);
     }
 
     function extendEndPresale() public onlyOperator {
@@ -286,7 +303,7 @@ contract XtatuzProject is Ownable {
             "PROJECT: ONLY_THE_EXTENDING_PERIOD"
         );
         require(_isTriggedEndpresale == false, "PROJECT: EXTENED_PRESALE");
-
+        uint256 prevEndPresale = endPresale;
         uint256 absoluteCount = count - _underwriteCount;
         uint256 percent = ((count - countReserve) * 100) / absoluteCount;
         if (percent >= 95) {
@@ -299,6 +316,8 @@ contract XtatuzProject is Ownable {
             endPresale += 30 days;
         }
         _isTriggedEndpresale = true;
+
+        emit ExtendEndPresale(prevEndPresale, endPresale, percent);
     }
 
     function _transferOperator(address newOperator_) internal ProhibitZeroAddress(newOperator_) {
@@ -338,6 +357,7 @@ contract XtatuzProject is Ownable {
         tokenAddress = tokenAddress_;
         _propertyAddress = propertyAddress_;
         _presaledAddress = presaledAddress_;
+        emit InitialData(count_, underwriteCount_, tokenAddress_, propertyAddress_, presaledAddress_);
     }
 
     function checkOnlyProjectOwner() internal view {

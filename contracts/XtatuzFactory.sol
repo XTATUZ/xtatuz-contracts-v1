@@ -23,7 +23,7 @@ contract XtatuzFactory is Ownable {
     address public _projectFactory;
 
     event CreatePresale(uint256 projectId, address presaleAddress);
-    event CreateProperty(uint256 projectId, address presaleAddress);
+    event CreateProperty(uint256 projectId, address propertyAddress);
     event CreateProjectContract(uint256 projectId, address projectAddress);
 
     constructor(
@@ -105,7 +105,7 @@ contract XtatuzFactory is Ownable {
         getPropertyAddress[projectData.projectId_] = propertyAddress;
         getPresaledAddress[projectData.projectId_] = presaledAddress;
 
-        emit CreateProjectContract(projectData.projectId_, propertyAddress);
+        emit CreateProjectContract(projectData.projectId_, projectAddress);
         return projectAddress;
     }
 }
