@@ -40,7 +40,7 @@ contract Property is ERC721Enumerable, Ownable {
     event MasterBurned(address operator);
     event MintFragment(address indexed to, uint256[] tokenIdList);
     event Defragment(address indexed fragmentsOwner);
-    event SetPropertyStatus(IProperty.PropertyStatus prevStatus, IProperty.PropertyStatus status);
+    event SetPropertyStatus(IProperty.PropertyStatus prevStatus, IProperty.PropertyStatus newStatus);
     event SetOperator(address prevOperator, address newOperator);
     event SetBaseURI(string prevBaseURI, string newBaseURI);
     event SetTokenURI(uint256 tokenId, string prevTokenURI, string newTokenURI);
