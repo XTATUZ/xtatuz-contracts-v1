@@ -123,7 +123,7 @@ contract XtatuzProject is Ownable {
 
     function setUnderwriteCount(uint256 underwriteCount_) public onlyOperator {
         require(underwriteCount_ < count, "PROJECT: INVALID_COUNT");
-        uint256 prevValue = underwriteCount_;
+        uint256 prevValue = _underwriteCount;
         _underwriteCount = underwriteCount_;
         emit SetUnderwriteCount(prevValue, underwriteCount_);
     }
