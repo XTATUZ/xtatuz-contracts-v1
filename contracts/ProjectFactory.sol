@@ -6,6 +6,7 @@ import "../interfaces/IProjectFactory.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ProjectFactory is Ownable {
+    event CreateProject(uint256 projectId, address projectAddress);
     function createProject(
         IProjectFactory.CreateProject memory createData
     ) public onlyOwner returns (address) {
@@ -25,6 +26,7 @@ contract ProjectFactory is Ownable {
             )
         );
         XtatuzProject(projectAddress).transferOwnership(msg.sender);
+        emit CreateProject(createData.projectId_, projectAddress);
         return projectAddress;
     }
 }

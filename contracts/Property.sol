@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity  0.8.17;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
@@ -40,6 +40,10 @@ contract Property is ERC721Enumerable, Ownable {
     event MasterBurned(address operator);
     event MintFragment(address indexed to, uint256[] tokenIdList);
     event Defragment(address indexed fragmentsOwner);
+    event SetPropertyStatus(IProperty.PropertyStatus prevStatus, IProperty.PropertyStatus status);
+    event SetOperator(address prevOperator, address newOperator);
+    event SetBaseURI(string prevBaseURI, string newBaseURI);
+    event SetTokenURI(uint256 tokenId, string prevTokenURI, string newTokenURI);
 
     function mintMaster() public onlyOwner {
         require(isMintedMaster == false, "PROPERTY: MASTER_MINTED");
@@ -84,16 +88,22 @@ contract Property is ERC721Enumerable, Ownable {
     }
 
     function setPropertyStatus(IProperty.PropertyStatus status) public onlyOperator {
+        IProperty.PropertyStatus prevStatus = status;
         propertyStatus = status;
+        emit SetPropertyStatus(prevStatus, status);
     }
 
     function _setOperator(address operator_) private onlyOperator {
         require(operator_ != address(0), "PROPERTY: OPERATOR_ADDRESS_ZERO");
+        address prevOperator = _operator;
         _operator = operator_;
+        emit SetOperator(prevOperator, operator_);
     }
 
     function setBaseURI(string memory baseURI_) public onlyOperator {
+        string memory prevBaseURI = baseURI;
         baseURI = baseURI_;
+        emit SetBaseURI(prevBaseURI, baseURI_);
     }
 
     function getTokenIdList(address member) public view returns (uint256[] memory) {
@@ -120,7 +130,9 @@ contract Property is ERC721Enumerable, Ownable {
 
     function setTokenURI(uint256 tokenId_, string memory tokenURI_) public onlyOperator {
         require(_exists(tokenId_), "PROPERTY: NOT_EXIST_TOKEN_ID");
+        string memory prevTokenURI = _tokenURIs[tokenId_];
         _tokenURIs[tokenId_] = tokenURI_;
+        emit SetTokenURI(tokenId_, prevTokenURI, tokenURI_);
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
@@ -141,7 +153,7 @@ contract Property is ERC721Enumerable, Ownable {
         }
     }
 
-    function setOperator(address operator_) external onlyOwner{
+    function setOperator(address operator_) external onlyOwner {
         _setOperator(operator_);
     }
 
