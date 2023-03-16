@@ -39,10 +39,10 @@ contract XtatuzReferral is Ownable {
     event ChangeMaxPercent(uint256 prevPercent, uint256 newPercent);
     event IncreaseBuyerRef(uint256 indexed projectId, uint256 referralAmount);
     event SetReferralLevels(uint256[] preLevels, uint256[] newLevels);
-    event SetLevel(uint256 projectId, string referral, uint256 level);
+    event SetLevel(uint256 indexed projectId, string referral, uint256 level);
     event UpdateReferralAmount(uint256 indexed projectId, uint256 amount_);
     event Claim(uint256 indexed projectId_, string referral_, uint256 amount);
-    event WithdrawFundsLeft(string referral_, uint256 projectId_, uint256 amount);
+    event WithdrawFundsLeft(string referral_, uint256 indexed projectId_, uint256 amount);
 
     modifier onlyOperator() {
         _checkOnlyOperator();

@@ -25,7 +25,7 @@ contract XtatuzReroll is Ownable {
         _;
     }
 
-    event SetRerollData(uint256 projectId_, string[] rerollData_);
+    event SetRerollData(uint256 indexed projectId_, string[] rerollData_);
     event SetFee(uint256 prevFee_, uint256 newFee);
 
     constructor(

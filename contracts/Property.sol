@@ -41,9 +41,9 @@ contract Property is ERC721Enumerable, Ownable {
     event MintFragment(address indexed to, uint256[] tokenIdList);
     event Defragment(address indexed fragmentsOwner);
     event SetPropertyStatus(IProperty.PropertyStatus prevStatus, IProperty.PropertyStatus newStatus);
-    event SetOperator(address prevOperator, address newOperator);
+    event SetOperator(address indexed prevOperator, address indexed newOperator);
     event SetBaseURI(string prevBaseURI, string newBaseURI);
-    event SetTokenURI(uint256 tokenId, string prevTokenURI, string newTokenURI);
+    event SetTokenURI(uint256 indexed tokenId, string prevTokenURI, string newTokenURI);
 
     function mintMaster() public onlyOwner {
         require(isMintedMaster == false, "PROPERTY: MASTER_MINTED");
