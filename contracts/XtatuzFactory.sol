@@ -22,9 +22,9 @@ contract XtatuzFactory is Ownable {
     address public _presaledFactory;
     address public _projectFactory;
 
-    event CreatePresale(uint256 projectId, address presaleAddress);
-    event CreateProperty(uint256 projectId, address propertyAddress);
-    event CreateProjectContract(uint256 projectId, address projectAddress);
+    event CreatePresale(uint256 indexed projectId, address presaleAddress);
+    event CreateProperty(uint256 indexed projectId, address propertyAddress);
+    event CreateProjectContract(uint256 indexed projectId, address projectAddress);
 
     constructor(
         address propertyFactory_,

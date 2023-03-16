@@ -6,7 +6,7 @@ import "../interfaces/IProjectFactory.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ProjectFactory is Ownable {
-    event CreateProject(uint256 projectId, address projectAddress);
+    event CreateProject(uint256 indexed projectId, address indexed projectAddress);
     function createProject(
         IProjectFactory.CreateProject memory createData
     ) public onlyOwner returns (address) {

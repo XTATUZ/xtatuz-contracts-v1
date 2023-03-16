@@ -5,7 +5,7 @@ import "./Presaled.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract PresaledFactory is Ownable {
-    event CreatePresale(string name, address presaleAddress);
+    event CreatePresale(string name, address indexed presaleAddress);
 
     function createPresale(
         string memory _name,

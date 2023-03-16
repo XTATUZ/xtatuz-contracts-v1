@@ -69,13 +69,13 @@ contract XtatuzProject is Ownable {
     event FinishProject(uint256 indexed projectId, address xtatuzWallet);
     event SetPresalePeriod(uint256 prevStart, uint256 prevEnd, uint256 newStart, uint256 newEnd);
     event SetUnderwriteCount(uint256 prevValue, uint256 newValue);
-    event Claim(address member, uint256[] tokenList);
-    event Refund(address member, uint256[] tokenList);
+    event Claim(address indexed member, uint256[] tokenList);
+    event Refund(address indexed member, uint256[] tokenList);
     event ExtendEndPresale(uint256 prevEndPresale, uint256 newEndPresale, uint256 presaledPercent);
-    event OwnerClaimLeft(address owner, uint256[] tokenList);
-    event MultiSigMint(address signer);
-    event MultiSigBurn(address signer);
-    event InitialData(uint256 count, uint256 underwriteCount, address tokenAddress, address propertyAddress, address presaledAddress);
+    event OwnerClaimLeft(address indexed owner, uint256[] tokenList);
+    event MultiSigMint(address indexed signer);
+    event MultiSigBurn(address indexed signer);
+    event InitialData(uint256 count, uint256 underwriteCount, address tokenAddress, address indexed propertyAddress, address indexed presaledAddress);
 
     modifier spvAndTrustee() {
         _checkSpvAndTrustee();
