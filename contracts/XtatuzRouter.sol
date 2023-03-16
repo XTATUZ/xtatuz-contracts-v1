@@ -69,9 +69,9 @@ contract XtatuzRouter {
     event PullbackInactive(uint256 indexed projectId, address inactiveWallet_);
     event NoticeReply(uint256 indexed projectId, address indexed inactiveWallet_, uint256 noticeTimestamp);
     event NoticeToInactiveWallet(uint256 indexed projectId, address indexed inactiveWallet_, uint256 noticeTimestamp);
-    event SetRerollAddress(address prevAddress, address newAddress);
-    event SetMembershipAddress(address prevAddress, address newAddress);
-    event SetReferralAddress(address prevAddress, address newAddress);
+    event SetRerollAddress(address indexed prevAddress, address newAddress);
+    event SetMembershipAddress(address indexed prevAddress, address newAddress);
+    event SetReferralAddress(address indexed prevAddress, address newAddress);
 
     modifier onlySpv() {
         require(_spvAddress == msg.sender, "ROUTER: ONLY_SPV");

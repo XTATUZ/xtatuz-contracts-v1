@@ -5,7 +5,7 @@ import "./Property.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract PropertyFactory is Ownable {
-    event CreateProperty(string name, address propertyAddress);
+    event CreateProperty(string name, address indexed propertyAddress);
 
     function createProperty(
         string memory _name,
